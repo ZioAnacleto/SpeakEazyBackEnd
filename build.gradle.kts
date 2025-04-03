@@ -9,7 +9,7 @@ group = "com.zioanacleto"
 version = "0.0.1"
 
 application {
-    mainClass = "com.zioanacleto.MainKt"
+    mainClass = "com.zioanacleto.ApplicationKt"
 
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
