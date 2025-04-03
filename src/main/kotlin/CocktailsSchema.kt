@@ -1,4 +1,4 @@
-package com.example
+package com.zioanacleto
 
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*

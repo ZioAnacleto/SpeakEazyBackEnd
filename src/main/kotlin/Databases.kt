@@ -1,4 +1,4 @@
-package com.example
+package com.zioanacleto
 
 import org.jetbrains.exposed.sql.Database
 
