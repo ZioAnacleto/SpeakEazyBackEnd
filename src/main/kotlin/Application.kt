@@ -8,10 +8,9 @@ import io.ktor.server.plugins.contentnegotiation.*
 import kotlinx.serialization.json.Json
 
 fun main(args: Array<String>) {
-    embeddedServer(
-        factory = Netty,
-        module = Application::module
-    ).start(wait = true)
+    embeddedServer(factory = Netty){
+        module()
+    }.start(wait = true)
 }
 
 fun Application.module() {

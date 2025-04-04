@@ -1,9 +1,9 @@
 
 plugins {
-    application
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlin.plugin.serialization)
+    application
 }
 
 group = "com.zioanacleto"
@@ -36,6 +36,15 @@ dependencies {
 
 tasks.withType<Jar> {
     manifest {
-        attributes["Main-Class"] = "com.zioanacleto.ApplicationKt"  // Assicurati che il nome sia corretto
+        attributes["Main-Class"] = "com.zioanacleto.ApplicationKt"
     }
+}
+
+tasks.register<Jar>("fatJar") {
+    from(sourceSets.main.get().output)
+    dependsOn(configurations.runtimeClasspath)
+    manifest {
+        attributes["Main-Class"] = "com.zioanacleto.ApplicationKt"
+    }
+    archiveFileName.set("SpeakEazyBackEnd-all.jar")
 }
