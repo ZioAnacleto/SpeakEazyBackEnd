@@ -42,10 +42,19 @@ tasks.withType<Jar> {
 }
 
 tasks.register<Jar>("fatJar") {
+    group = "build"
+    description = "Assemble a fat JAR"
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
     from(sourceSets.main.get().output)
     dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+    })
     manifest {
         attributes["Main-Class"] = "com.zioanacleto.ApplicationKt"
     }
     archiveFileName.set("SpeakEazyBackEnd-all.jar")
+    destinationDirectory.set(file("$buildDir/libs"))
 }
