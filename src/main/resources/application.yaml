@@ -4,3 +4,6 @@ ktor:
             - com.zioanacleto.ApplicationKt.module
     deployment:
         port: 9292
+        maxInitialLineLength: 2048
+        maxHeaderSize: 1024
+        maxChunkSize: 42
