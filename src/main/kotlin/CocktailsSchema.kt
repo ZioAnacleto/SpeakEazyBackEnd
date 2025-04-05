@@ -5,6 +5,11 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 @Serializable
+data class ExposedCocktailList(
+    val cocktails: List<ExposedCocktail>
+)
+
+@Serializable
 data class ExposedCocktail(
     val id: String,
     val name: String,
@@ -72,21 +77,23 @@ class CocktailService(database: Database) {
         }
 
     // todo: pagination?
-    suspend fun readAll(): List<ExposedCocktail> =
+    suspend fun readAll(): ExposedCocktailList =
         dbQuery {
-            Cocktails.selectAll()
-                .mapNotNull {
-                    ExposedCocktail(
-                        id = it[Cocktails.id].toString(),
-                        name = it[Cocktails.name],
-                        category = it[Cocktails.category],
-                        instructions = it[Cocktails.instructions],
-                        instructionsIt = it[Cocktails.instructionsIt],
-                        glass = it[Cocktails.glass],
-                        isAlcoholic = it[Cocktails.isAlcoholic],
-                        imageLink = it[Cocktails.imageLink]
-                    )
-                }
+            ExposedCocktailList(
+                Cocktails.selectAll()
+                    .mapNotNull {
+                        ExposedCocktail(
+                            id = it[Cocktails.id].toString(),
+                            name = it[Cocktails.name],
+                            category = it[Cocktails.category],
+                            instructions = it[Cocktails.instructions],
+                            instructionsIt = it[Cocktails.instructionsIt],
+                            glass = it[Cocktails.glass],
+                            isAlcoholic = it[Cocktails.isAlcoholic],
+                            imageLink = it[Cocktails.imageLink]
+                        )
+                    }
+            )
         }
 
     companion object {
