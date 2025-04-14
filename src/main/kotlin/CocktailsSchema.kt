@@ -18,11 +18,14 @@ data class ExposedCocktail(
     val instructionsIt: String,
     val glass: String,
     val isAlcoholic: Boolean,
-    val imageLink: String
+    val imageLink: String,
+    val type: String,
+    val method: String
 ) {
     override fun toString(): String {
         return "Cocktail id: $id\n name: $name\ncategory: $category\nglass: $glass\ninstructions: $instructions\n" +
-                "instructionsIT: $instructionsIt\nisAlcoholic: $isAlcoholic\nimageLink: $imageLink"
+                "instructionsIT: $instructionsIt\nisAlcoholic: $isAlcoholic\nimageLink: $imageLink\n" +
+                "type: $type\nmethod: $method"
     }
 }
 
@@ -36,6 +39,8 @@ class CocktailService(database: Database) {
         val glass = varchar(DB_KEY_GLASS, length = 500)
         val isAlcoholic = bool(DB_KEY_IS_ALCOHOLIC)
         val imageLink = varchar(DB_KEY_IMAGE_LINK, length = 1000)
+        val type = varchar(DB_KEY_TYPE, length = 500)
+        val method = varchar(DB_KEY_METHOD, length = 500)
     }
 
     init {
@@ -54,6 +59,8 @@ class CocktailService(database: Database) {
             it[glass] = cocktail.glass
             it[isAlcoholic] = cocktail.isAlcoholic
             it[imageLink] = cocktail.imageLink
+            it[type] = cocktail.type
+            it[method] = cocktail.method
         }[Cocktails.id]
     }
 
@@ -62,16 +69,7 @@ class CocktailService(database: Database) {
             Cocktails.selectAll()
                 .where { Cocktails.id eq id }
                 .map {
-                    ExposedCocktail(
-                        id = it[Cocktails.id].toString(),
-                        name = it[Cocktails.name],
-                        category = it[Cocktails.category],
-                        instructions = it[Cocktails.instructions],
-                        instructionsIt = it[Cocktails.instructionsIt],
-                        glass = it[Cocktails.glass],
-                        isAlcoholic = it[Cocktails.isAlcoholic],
-                        imageLink = it[Cocktails.imageLink]
-                    )
+                    it.createCocktail()
                 }
                 .singleOrNull()
         }
@@ -82,19 +80,24 @@ class CocktailService(database: Database) {
             ExposedCocktailList(
                 Cocktails.selectAll()
                     .mapNotNull {
-                        ExposedCocktail(
-                            id = it[Cocktails.id].toString(),
-                            name = it[Cocktails.name],
-                            category = it[Cocktails.category],
-                            instructions = it[Cocktails.instructions],
-                            instructionsIt = it[Cocktails.instructionsIt],
-                            glass = it[Cocktails.glass],
-                            isAlcoholic = it[Cocktails.isAlcoholic],
-                            imageLink = it[Cocktails.imageLink]
-                        )
+                        it.createCocktail()
                     }
             )
         }
+
+    private fun ResultRow.createCocktail() =
+        ExposedCocktail(
+            id = this[Cocktails.id].toString(),
+            name = this[Cocktails.name],
+            category = this[Cocktails.category],
+            instructions = this[Cocktails.instructions],
+            instructionsIt = this[Cocktails.instructionsIt],
+            glass = this[Cocktails.glass],
+            isAlcoholic = this[Cocktails.isAlcoholic],
+            imageLink = this[Cocktails.imageLink],
+            type = this[Cocktails.type],
+            method = this[Cocktails.method]
+        )
 
     companion object {
         const val DB_KEY_ID = "id"
@@ -105,5 +108,7 @@ class CocktailService(database: Database) {
         const val DB_KEY_GLASS = "glass"
         const val DB_KEY_IS_ALCOHOLIC = "isalcoholic"
         const val DB_KEY_IMAGE_LINK = "imagelink"
+        const val DB_KEY_TYPE = "type"
+        const val DB_KEY_METHOD = "method"
     }
 }
