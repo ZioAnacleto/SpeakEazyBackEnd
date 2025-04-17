@@ -1,6 +1,8 @@
 package com.zioanacleto
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.internal.readJson
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -20,12 +22,13 @@ data class ExposedCocktail(
     val isAlcoholic: Boolean,
     val imageLink: String,
     val type: String,
-    val method: String
+    val method: String,
+    val ingredients: List<ExposedIngredient>
 ) {
     override fun toString(): String {
         return "Cocktail id: $id\n name: $name\ncategory: $category\nglass: $glass\ninstructions: $instructions\n" +
                 "instructionsIT: $instructionsIt\nisAlcoholic: $isAlcoholic\nimageLink: $imageLink\n" +
-                "type: $type\nmethod: $method"
+                "type: $type\nmethod: $method\ningredients: $ingredients"
     }
 }
 
@@ -41,6 +44,7 @@ class CocktailService(database: Database) {
         val imageLink = varchar(DB_KEY_IMAGE_LINK, length = 1000)
         val type = varchar(DB_KEY_TYPE, length = 500)
         val method = varchar(DB_KEY_METHOD, length = 500)
+        val ingredients = largeText(DB_KEY_INGREDIENTS)
     }
 
     init {
@@ -61,6 +65,7 @@ class CocktailService(database: Database) {
             it[imageLink] = cocktail.imageLink
             it[type] = cocktail.type
             it[method] = cocktail.method
+            it[ingredients] = Json.encodeToString(cocktail.ingredients)
         }[Cocktails.id]
     }
 
@@ -96,7 +101,8 @@ class CocktailService(database: Database) {
             isAlcoholic = this[Cocktails.isAlcoholic],
             imageLink = this[Cocktails.imageLink],
             type = this[Cocktails.type],
-            method = this[Cocktails.method]
+            method = this[Cocktails.method],
+            ingredients = Json.decodeFromString(this[Cocktails.ingredients])
         )
 
     companion object {
@@ -110,5 +116,6 @@ class CocktailService(database: Database) {
         const val DB_KEY_IMAGE_LINK = "imagelink"
         const val DB_KEY_TYPE = "type"
         const val DB_KEY_METHOD = "method"
+        const val DB_KEY_INGREDIENTS = "ingredients"
     }
 }

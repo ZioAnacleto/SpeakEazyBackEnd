@@ -7,6 +7,7 @@ ktor-version = "3.1.1"
 logback-version = "1.4.14"
 postgres = "42.7.3"
 cloudinary = "1.10.0"
+kotlinx-serialization-json = "1.6.3"
 
 [libraries]
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor-version" }
@@ -24,6 +25,8 @@ kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version
 postgres = { module = "org.postgresql:postgresql", version.ref = "postgres" }
 
 cloudinary = { module = "com.cloudinary:kotlin-url-gen", version.ref = "cloudinary" }
+
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }
