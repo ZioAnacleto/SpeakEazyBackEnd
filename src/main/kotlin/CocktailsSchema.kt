@@ -1,5 +1,6 @@
 package com.zioanacleto
 
+import io.ktor.util.logging.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.internal.readJson
@@ -93,8 +94,13 @@ class CocktailService(database: Database) {
                 }
                 .singleOrNull()
 
+            println("Cocktail: $cocktail")
+
             // Select ingredients' ids of selected Cocktail
             val ingredientsIds = cocktail?.ingredients?.ingredients?.map { it.id.toInt() } ?: listOf()
+
+            println("IngredientIds: $ingredientsIds")
+
             // Create ExposedCocktailIngredient objects from Ingredients table
             val ingredients = IngredientsService.Ingredients.selectAll()
                 .where { IngredientsService.Ingredients.id inList ingredientsIds }
@@ -105,6 +111,8 @@ class CocktailService(database: Database) {
                         imageUrl = it[IngredientsService.Ingredients.image]
                     )
                 }
+
+            println("Ingredients: $ingredients")
 
             // Mapping ingredients information inside cocktail object
             cocktail?.apply {
