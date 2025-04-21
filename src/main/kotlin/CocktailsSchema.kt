@@ -127,6 +127,10 @@ class CocktailService(database: Database) {
                     )
                 }
             }
+
+            println("Edited Cocktail: $cocktail")
+
+            cocktail
         }
 
     // todo: pagination?
