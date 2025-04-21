@@ -19,8 +19,10 @@ data class ExposedCocktailIngredients(
 @Serializable
 data class ExposedCocktailIngredient(
     val id: String,
-    val quantityCl: String,
-    val quantityOz: String
+    var name: String = "",
+    var imageUrl: String = "",
+    var quantityCl: String = "",
+    var quantityOz: String = ""
 )
 
 @Serializable
@@ -35,7 +37,7 @@ data class ExposedCocktail(
     val imageLink: String,
     val type: String,
     val method: String,
-    val ingredients: ExposedCocktailIngredients
+    var ingredients: ExposedCocktailIngredients
 ) {
     override fun toString(): String {
         return "Cocktail id: $id\n name: $name\ncategory: $category\nglass: $glass\ninstructions: $instructions\n" +
@@ -83,12 +85,40 @@ class CocktailService(database: Database) {
 
     suspend fun readSingle(id: Int): ExposedCocktail? =
         dbQuery {
-            Cocktails.selectAll()
+            // Find correct cocktail with given id
+            val cocktail = Cocktails.selectAll()
                 .where { Cocktails.id eq id }
                 .map {
                     it.createCocktail()
                 }
                 .singleOrNull()
+
+            // Select ingredients' ids of selected Cocktail
+            val ingredientsIds = cocktail?.ingredients?.ingredients?.map { it.id.toInt() } ?: listOf()
+            // Create ExposedCocktailIngredient objects from Ingredients table
+            val ingredients = IngredientsService.Ingredients.selectAll()
+                .where { IngredientsService.Ingredients.id inList ingredientsIds }
+                .map {
+                    ExposedCocktailIngredient(
+                        id = it[IngredientsService.Ingredients.id].toString(),
+                        name = it[IngredientsService.Ingredients.name],
+                        imageUrl = it[IngredientsService.Ingredients.image]
+                    )
+                }
+
+            // Mapping ingredients information inside cocktail object
+            cocktail?.apply {
+                this.ingredients.ingredients.map { cocktailIngredient ->
+                    val actualIngredient = ingredients.find { it.id == cocktailIngredient.id }
+                    ExposedCocktailIngredient(
+                        id = cocktailIngredient.id,
+                        name = actualIngredient?.name ?: "",
+                        imageUrl = actualIngredient?.imageUrl ?: "",
+                        quantityOz = cocktailIngredient.quantityOz,
+                        quantityCl = cocktailIngredient.quantityCl
+                    )
+                }
+            }
         }
 
     // todo: pagination?
