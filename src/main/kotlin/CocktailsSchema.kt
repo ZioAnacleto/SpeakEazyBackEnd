@@ -94,7 +94,7 @@ class CocktailService(database: Database) {
                 }
                 .singleOrNull()
 
-            println("Cocktail: $cocktail")
+            println("Cocktail ingredients: ${cocktail?.ingredients}")
 
             // Select ingredients' ids of selected Cocktail
             val ingredientsIds = cocktail?.ingredients?.ingredients?.map { it.id.toInt() } ?: listOf()
@@ -105,10 +105,18 @@ class CocktailService(database: Database) {
             val ingredients = IngredientsService.Ingredients.selectAll()
                 .where { IngredientsService.Ingredients.id inList ingredientsIds }
                 .map {
+                    val cocktailIngredient = cocktail?.ingredients?.ingredients?.find { ing ->
+                        ing.id == it[IngredientsService.Ingredients.id].toString()
+                    }
+
+                    println("cocktailIngredient: $cocktailIngredient")
+
                     ExposedCocktailIngredient(
                         id = it[IngredientsService.Ingredients.id].toString(),
                         name = it[IngredientsService.Ingredients.name],
-                        imageUrl = it[IngredientsService.Ingredients.image]
+                        imageUrl = it[IngredientsService.Ingredients.image],
+                        quantityCl = cocktailIngredient?.quantityCl ?: "",
+                        quantityOz = cocktailIngredient?.quantityOz ?: ""
                     )
                 }
 
@@ -116,16 +124,9 @@ class CocktailService(database: Database) {
 
             // Mapping ingredients information inside cocktail object
             cocktail?.apply {
-                this.ingredients.ingredients.map { cocktailIngredient ->
-                    val actualIngredient = ingredients.find { it.id == cocktailIngredient.id }
-                    ExposedCocktailIngredient(
-                        id = cocktailIngredient.id,
-                        name = actualIngredient?.name ?: "",
-                        imageUrl = actualIngredient?.imageUrl ?: "",
-                        quantityOz = cocktailIngredient.quantityOz,
-                        quantityCl = cocktailIngredient.quantityCl
-                    )
-                }
+                this.ingredients = ExposedCocktailIngredients(
+                    ingredients = ingredients
+                )
             }
 
             println("Edited Cocktail: $cocktail")
