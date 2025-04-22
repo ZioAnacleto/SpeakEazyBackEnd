@@ -10,8 +10,9 @@ fun Application.configureTokenValidation() {
         val receivedToken = call.request.headers[HEADER_AUTHORIZATION]
             ?.removePrefix("Bearer ")
             ?.trim()
-            ?.hashToken()
-        val expectedToken = System.getenv(ENVIRONMENT_TOKEN)
+        val expectedToken = System.getenv(ENVIRONMENT_TOKEN).hashToken()
+
+        println()
 
         if (receivedToken == null || !expectedToken.equals(receivedToken)) {
             call.respondText("Unauthorized", status = HttpStatusCode.Unauthorized)
