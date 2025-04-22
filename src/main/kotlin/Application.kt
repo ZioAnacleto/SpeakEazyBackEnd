@@ -19,6 +19,8 @@ fun Application.module() {
             }
         )
     }
+
+    configureTokenValidation()
     configureSerialization()
     configureRouting(configureDatabase())
 }
