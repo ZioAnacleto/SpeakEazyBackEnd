@@ -1,9 +1,7 @@
 package com.zioanacleto
 
-import io.ktor.util.logging.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.internal.readJson
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -23,7 +21,8 @@ data class ExposedCocktailIngredient(
     var name: String = "",
     var imageUrl: String = "",
     var quantityCl: String = "",
-    var quantityOz: String = ""
+    var quantityOz: String = "",
+    var quantitySpecial: String? = null
 )
 
 @Serializable
@@ -94,12 +93,8 @@ class CocktailService(database: Database) {
                 }
                 .singleOrNull()
 
-            println("Cocktail ingredients: ${cocktail?.ingredients}")
-
             // Select ingredients' ids of selected Cocktail
             val ingredientsIds = cocktail?.ingredients?.ingredients?.map { it.id.toInt() } ?: listOf()
-
-            println("IngredientIds: $ingredientsIds")
 
             // Create ExposedCocktailIngredient objects from Ingredients table
             val ingredients = IngredientsService.Ingredients.selectAll()
@@ -109,18 +104,15 @@ class CocktailService(database: Database) {
                         ing.id == it[IngredientsService.Ingredients.id].toString()
                     }
 
-                    println("cocktailIngredient: $cocktailIngredient")
-
                     ExposedCocktailIngredient(
                         id = it[IngredientsService.Ingredients.id].toString(),
                         name = it[IngredientsService.Ingredients.name],
                         imageUrl = it[IngredientsService.Ingredients.image],
                         quantityCl = cocktailIngredient?.quantityCl ?: "",
-                        quantityOz = cocktailIngredient?.quantityOz ?: ""
+                        quantityOz = cocktailIngredient?.quantityOz ?: "",
+                        quantitySpecial = cocktailIngredient?.quantitySpecial
                     )
                 }
-
-            println("Ingredients: $ingredients")
 
             // Mapping ingredients information inside cocktail object
             cocktail?.apply {
@@ -128,8 +120,6 @@ class CocktailService(database: Database) {
                     ingredients = ingredients
                 )
             }
-
-            println("Edited Cocktail: $cocktail")
 
             cocktail
         }

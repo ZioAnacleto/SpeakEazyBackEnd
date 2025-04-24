@@ -29,7 +29,7 @@ class IngredientsService(database: Database) {
     }
 
     init {
-        transaction {
+        transaction(database) {
             SchemaUtils.create(Ingredients)
         }
     }
