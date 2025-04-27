@@ -5,3 +5,5 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 
 suspend fun <T> dbQuery(block: suspend () -> T): T =
     newSuspendedTransaction(Dispatchers.IO) { block() }
+
+fun String?.default(value: String? = null): String = this ?: value ?: ""

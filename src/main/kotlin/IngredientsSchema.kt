@@ -5,11 +5,6 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 @Serializable
-data class ExposedIngredientsList(
-    val ingredientsList: ExposedIngredients
-)
-
-@Serializable
 data class ExposedIngredients(
     val ingredients: List<ExposedIngredient>
 )
@@ -52,12 +47,10 @@ class IngredientsService(database: Database) {
         }
 
     // todo: pagination?
-    suspend fun readAll(): ExposedIngredientsList = dbQuery {
-        ExposedIngredientsList(
-            ingredientsList = ExposedIngredients(
-                Ingredients.selectAll()
-                    .mapNotNull { it.createIngredient() }
-            )
+    suspend fun readAll(): ExposedIngredients = dbQuery {
+        ExposedIngredients(
+            Ingredients.selectAll()
+                .mapNotNull { it.createIngredient() }
         )
     }
 

@@ -108,8 +108,8 @@ class CocktailService(database: Database) {
                         id = it[IngredientsService.Ingredients.id].toString(),
                         name = it[IngredientsService.Ingredients.name],
                         imageUrl = it[IngredientsService.Ingredients.image],
-                        quantityCl = cocktailIngredient?.quantityCl ?: "",
-                        quantityOz = cocktailIngredient?.quantityOz ?: "",
+                        quantityCl = cocktailIngredient?.quantityCl.default("-"),
+                        quantityOz = cocktailIngredient?.quantityOz.default("-"),
                         quantitySpecial = cocktailIngredient?.quantitySpecial
                     )
                 }
@@ -133,6 +133,16 @@ class CocktailService(database: Database) {
                         it.createCocktail()
                     }
             )
+        }
+
+    fun deleteColumn(columnName: String): String =
+        transaction {
+            val column = Column(Cocktails, columnName, IntegerColumnType())
+
+            column.dropStatement().forEach {
+                exec(it)
+            }
+            column.name
         }
 
     private fun ResultRow.createCocktail() =

@@ -45,6 +45,14 @@ private fun Routing.setupCocktailsRouting(database: Database) {
             call.respond(HttpStatusCode.NotFound)
         }
     }
+
+    // Alter table deleting a column
+    delete("/cocktails/dropColumn/{columnName}") {
+        val columnName = call.parameters["columnName"] ?: throw IllegalArgumentException("Invalid column name")
+        val deletedColumnName = cocktailService.deleteColumn(columnName)
+
+        call.respond(HttpStatusCode.Accepted, deletedColumnName)
+    }
 }
 
 private fun Routing.setupIngredientsRouting(database: Database) {
