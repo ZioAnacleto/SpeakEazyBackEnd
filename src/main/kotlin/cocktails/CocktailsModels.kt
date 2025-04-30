@@ -1,0 +1,45 @@
+package com.zioanacleto.cocktails
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ExposedCocktailList(
+    val cocktails: List<ExposedCocktail>
+)
+
+@Serializable
+data class ExposedCocktailIngredients(
+    val ingredients: List<ExposedCocktailIngredient>
+)
+
+@Serializable
+data class ExposedCocktailIngredient(
+    val id: String,
+    var name: String = "",
+    var imageUrl: String = "",
+    var quantityCl: String = "",
+    var quantityOz: String = "",
+    var quantitySpecial: String? = null
+)
+
+@Serializable
+data class ExposedCocktail(
+    val id: String,
+    val name: String,
+    val category: String,
+    val instructions: String,
+    val instructionsIt: String,
+    val glass: String,
+    val isAlcoholic: Boolean,
+    val imageLink: String,
+    val type: String,
+    val method: String,
+    var ingredients: ExposedCocktailIngredients,
+    var visualizations: Long
+) {
+    override fun toString(): String {
+        return "Cocktail id: $id\n name: $name\ncategory: $category\nglass: $glass\ninstructions: $instructions\n" +
+                "instructionsIT: $instructionsIt\nisAlcoholic: $isAlcoholic\nimageLink: $imageLink\n" +
+                "type: $type\nmethod: $method\ningredients: $ingredients\nvisualizations: $visualizations"
+    }
+}

@@ -1,50 +1,11 @@
-package com.zioanacleto
+package com.zioanacleto.cocktails
 
-import kotlinx.serialization.Serializable
+import com.zioanacleto.dbQuery
+import com.zioanacleto.default
+import com.zioanacleto.ingredients.IngredientsService
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-
-@Serializable
-data class ExposedCocktailList(
-    val cocktails: List<ExposedCocktail>
-)
-
-@Serializable
-data class ExposedCocktailIngredients(
-    val ingredients: List<ExposedCocktailIngredient>
-)
-
-@Serializable
-data class ExposedCocktailIngredient(
-    val id: String,
-    var name: String = "",
-    var imageUrl: String = "",
-    var quantityCl: String = "",
-    var quantityOz: String = "",
-    var quantitySpecial: String? = null
-)
-
-@Serializable
-data class ExposedCocktail(
-    val id: String,
-    val name: String,
-    val category: String,
-    val instructions: String,
-    val instructionsIt: String,
-    val glass: String,
-    val isAlcoholic: Boolean,
-    val imageLink: String,
-    val type: String,
-    val method: String,
-    var ingredients: ExposedCocktailIngredients
-) {
-    override fun toString(): String {
-        return "Cocktail id: $id\n name: $name\ncategory: $category\nglass: $glass\ninstructions: $instructions\n" +
-                "instructionsIT: $instructionsIt\nisAlcoholic: $isAlcoholic\nimageLink: $imageLink\n" +
-                "type: $type\nmethod: $method\ningredients: $ingredients"
-    }
-}
 
 class CocktailService(database: Database) {
     object Cocktails : Table() {
@@ -59,6 +20,7 @@ class CocktailService(database: Database) {
         val type = varchar(DB_KEY_TYPE, length = 500)
         val method = varchar(DB_KEY_METHOD, length = 500)
         val ingredients = largeText(DB_KEY_INGREDIENTS)
+        val visualizations = long(DB_KEY_VISUALIZATIONS)
     }
 
     init {
@@ -67,6 +29,9 @@ class CocktailService(database: Database) {
         }
     }
 
+    /**
+     *  Suspend function that inserts new row on Cocktail DB, returning the newly inserted row's id
+     */
     suspend fun create(cocktail: ExposedCocktail): Int = dbQuery {
         Cocktails.insert {
             it[id] = cocktail.id.toInt()
@@ -80,8 +45,30 @@ class CocktailService(database: Database) {
             it[type] = cocktail.type
             it[method] = cocktail.method
             it[ingredients] = Json.encodeToString(cocktail.ingredients)
+            it[visualizations] = cocktail.visualizations
         }[Cocktails.id]
     }
+
+    /**
+     *  Suspend function that updates matching row with new data in Cocktail DB
+     */
+    suspend fun update(cocktailId: Int, cocktail: ExposedCocktail): Int =
+        dbQuery {
+            Cocktails.update({ Cocktails.id eq cocktailId }) {
+                it[id] = cocktail.id.toInt()
+                it[name] = cocktail.name
+                it[category] = cocktail.category
+                it[instructions] = cocktail.instructions
+                it[instructionsIt] = cocktail.instructionsIt
+                it[glass] = cocktail.glass
+                it[isAlcoholic] = cocktail.isAlcoholic
+                it[imageLink] = cocktail.imageLink
+                it[type] = cocktail.type
+                it[method] = cocktail.method
+                it[ingredients] = Json.encodeToString(cocktail.ingredients)
+                it[visualizations] = cocktail.visualizations
+            }
+        }
 
     suspend fun readSingle(id: Int): ExposedCocktail? =
         dbQuery {
@@ -124,6 +111,12 @@ class CocktailService(database: Database) {
             cocktail
         }
 
+    suspend fun readAllWithCategory(category: String): ExposedCocktailList =
+        queryCocktailsWithWhereCondition { Cocktails.category eq category }
+
+    suspend fun readAllWithType(type: String): ExposedCocktailList =
+        queryCocktailsWithWhereCondition { Cocktails.type eq type }
+
     // todo: pagination?
     suspend fun readAll(): ExposedCocktailList =
         dbQuery {
@@ -132,6 +125,18 @@ class CocktailService(database: Database) {
                     .mapNotNull {
                         it.createCocktail()
                     }
+            )
+        }
+
+    suspend fun readMostPopular(size: Int): ExposedCocktailList =
+        dbQuery {
+            ExposedCocktailList(
+                Cocktails.selectAll()
+                    .mapNotNull {
+                        it.createCocktail()
+                    }
+                    .sortedByDescending { it.visualizations }
+                    .take(size)
             )
         }
 
@@ -145,6 +150,18 @@ class CocktailService(database: Database) {
             column.name
         }
 
+    private suspend fun queryCocktailsWithWhereCondition(
+        whereCondition: SqlExpressionBuilder.() -> Op<Boolean>
+    ) = dbQuery {
+        ExposedCocktailList(
+            Cocktails.selectAll()
+                .where(whereCondition)
+                .mapNotNull {
+                    it.createCocktail()
+                }
+        )
+    }
+
     private fun ResultRow.createCocktail() =
         ExposedCocktail(
             id = this[Cocktails.id].toString(),
@@ -157,20 +174,22 @@ class CocktailService(database: Database) {
             imageLink = this[Cocktails.imageLink],
             type = this[Cocktails.type],
             method = this[Cocktails.method],
-            ingredients = Json.decodeFromString(this[Cocktails.ingredients])
+            ingredients = Json.decodeFromString(this[Cocktails.ingredients]),
+            visualizations = this[Cocktails.visualizations]
         )
 
     companion object {
-        const val DB_KEY_ID = "id"
-        const val DB_KEY_NAME = "name"
-        const val DB_KEY_CATEGORY = "category"
-        const val DB_KEY_INSTRUCTIONS = "instructions"
-        const val DB_KEY_INSTRUCTIONS_IT = "instructionsit"
-        const val DB_KEY_GLASS = "glass"
-        const val DB_KEY_IS_ALCOHOLIC = "isalcoholic"
-        const val DB_KEY_IMAGE_LINK = "imagelink"
-        const val DB_KEY_TYPE = "type"
-        const val DB_KEY_METHOD = "method"
-        const val DB_KEY_INGREDIENTS = "ingredients"
+        private const val DB_KEY_ID = "id"
+        private const val DB_KEY_NAME = "name"
+        private const val DB_KEY_CATEGORY = "category"
+        private const val DB_KEY_INSTRUCTIONS = "instructions"
+        private const val DB_KEY_INSTRUCTIONS_IT = "instructionsit"
+        private const val DB_KEY_GLASS = "glass"
+        private const val DB_KEY_IS_ALCOHOLIC = "isalcoholic"
+        private const val DB_KEY_IMAGE_LINK = "imagelink"
+        private const val DB_KEY_TYPE = "type"
+        private const val DB_KEY_METHOD = "method"
+        private const val DB_KEY_INGREDIENTS = "ingredients"
+        private const val DB_KEY_VISUALIZATIONS = "visualizations"
     }
 }

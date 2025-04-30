@@ -1,20 +1,8 @@
-package com.zioanacleto
+package com.zioanacleto.ingredients
 
-import kotlinx.serialization.Serializable
+import com.zioanacleto.dbQuery
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-
-@Serializable
-data class ExposedIngredients(
-    val ingredients: List<ExposedIngredient>
-)
-
-@Serializable
-data class ExposedIngredient(
-    val id: String,
-    val name: String,
-    val imageUrl: String
-)
 
 class IngredientsService(database: Database) {
     object Ingredients : Table() {
