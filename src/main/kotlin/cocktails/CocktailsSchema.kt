@@ -50,23 +50,12 @@ class CocktailService(database: Database) {
     }
 
     /**
-     *  Suspend function that updates matching row with new data in Cocktail DB
+     *  Suspend function that updates matching row with new visualizations data in Cocktail DB
      */
-    suspend fun update(cocktailId: Int, cocktail: ExposedCocktail): Int =
+    suspend fun update(cocktailId: Int, cocktailVisualizations: Long): Int =
         dbQuery {
             Cocktails.update({ Cocktails.id eq cocktailId }) {
-                it[id] = cocktail.id.toInt()
-                it[name] = cocktail.name
-                it[category] = cocktail.category
-                it[instructions] = cocktail.instructions
-                it[instructionsIt] = cocktail.instructionsIt
-                it[glass] = cocktail.glass
-                it[isAlcoholic] = cocktail.isAlcoholic
-                it[imageLink] = cocktail.imageLink
-                it[type] = cocktail.type
-                it[method] = cocktail.method
-                it[ingredients] = Json.encodeToString(cocktail.ingredients)
-                it[visualizations] = cocktail.visualizations
+                it[visualizations] = cocktailVisualizations
             }
         }
 
