@@ -10,7 +10,11 @@ fun Routing.setupHomeRouting(database: Database) {
 
     // Get home sections containing cocktails
     get("/home") {
+        call.response.cacheControl(CacheControl.MaxAge(3600))
         val sections = homeService.homeSections()
-        call.respond(HttpStatusCode.OK, sections)
+        call.respond(
+            HttpStatusCode.OK,
+            sections
+        )
     }
 }

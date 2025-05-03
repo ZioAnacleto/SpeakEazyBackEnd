@@ -4,7 +4,7 @@ import com.zioanacleto.cocktails.CocktailService
 import com.zioanacleto.dbQuery
 import org.jetbrains.exposed.sql.Database
 
-class HomeService(val database: Database) {
+class HomeService(private val database: Database) {
 
     suspend fun homeSections(): ExposedHomeSectionsList = dbQuery {
         var id = 0
