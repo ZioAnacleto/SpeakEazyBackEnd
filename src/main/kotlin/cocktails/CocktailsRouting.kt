@@ -45,9 +45,8 @@ fun Routing.setupCocktailsRouting(database: Database) {
     // Updates single cocktail with new data, updating visualizations number
     put("/cocktails/{id}") {
         val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
-        var cocktailVisualizations = call.receive<Long>()
 
-        val updatedCocktails = cocktailService.update(id, ++cocktailVisualizations)
+        val updatedCocktails = cocktailService.updateVisualizations(id)
         call.respond(HttpStatusCode.OK, updatedCocktails)
     }
 }

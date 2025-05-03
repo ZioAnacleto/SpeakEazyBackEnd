@@ -5,6 +5,7 @@ import com.zioanacleto.default
 import com.zioanacleto.ingredients.IngredientsService
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class CocktailService(database: Database) {
@@ -52,10 +53,10 @@ class CocktailService(database: Database) {
     /**
      *  Suspend function that updates matching row with new visualizations data in Cocktail DB
      */
-    suspend fun update(cocktailId: Int, cocktailVisualizations: Long): Int =
+    suspend fun updateVisualizations(cocktailId: Int): Int =
         dbQuery {
             Cocktails.update({ Cocktails.id eq cocktailId }) {
-                it[visualizations] = cocktailVisualizations
+                it[visualizations] = visualizations + 1
             }
         }
 
