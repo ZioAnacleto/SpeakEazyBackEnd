@@ -3,6 +3,7 @@ package com.zioanacleto
 import com.zioanacleto.cocktails.setupCocktailsRouting
 import com.zioanacleto.home.setupHomeRouting
 import com.zioanacleto.ingredients.setupIngredientsRouting
+import com.zioanacleto.search.setupSearchRouting
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -17,5 +18,6 @@ fun Application.configureRouting(database: Database) {
         setupCocktailsRouting(database)
         setupIngredientsRouting(database)
         setupHomeRouting(database)
+        setupSearchRouting(database)
     }
 }

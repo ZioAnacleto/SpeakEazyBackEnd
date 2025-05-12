@@ -32,6 +32,10 @@ dependencies {
     implementation(libs.cloudinary)
     implementation(libs.kotlinx.serialization.json)
 
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
 }
