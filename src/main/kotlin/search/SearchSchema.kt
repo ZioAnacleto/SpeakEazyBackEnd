@@ -11,6 +11,7 @@ import io.ktor.serialization.kotlinx.json.*
 
 class SearchService {
     suspend fun queryModel(prompt: SearchRequest): String {
+        println("Search service, request: $prompt, requestBody: ${prompt.toInputPrompt()}")
         val client = HttpClient(CIO) {
             install(ContentNegotiation) {
                 json()
