@@ -4,6 +4,7 @@ import com.zioanacleto.cocktails.setupCocktailsRouting
 import com.zioanacleto.home.setupHomeRouting
 import com.zioanacleto.ingredients.setupIngredientsRouting
 import com.zioanacleto.search.setupSearchRouting
+import com.zioanacleto.tags.setupTagsRouting
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -19,5 +20,6 @@ fun Application.configureRouting(database: Database) {
         setupIngredientsRouting(database)
         setupHomeRouting(database)
         setupSearchRouting(database)
+        setupTagsRouting(database)
     }
 }

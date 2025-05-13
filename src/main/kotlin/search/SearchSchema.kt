@@ -1,5 +1,6 @@
 package com.zioanacleto.search
 
+import com.zioanacleto.tags.TagsService
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -8,10 +9,14 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.auth.*
 import io.ktor.serialization.kotlinx.json.*
+import org.jetbrains.exposed.sql.Database
 
-class SearchService {
+class SearchService(private val database: Database) {
     suspend fun queryModel(prompt: SearchRequest): String {
-        println("Search service, request: $prompt, requestBody: ${prompt.toInputPrompt()}")
+        val tagsService = TagsService(database)
+        val tags = tagsService.readAll()
+
+        println("Search service, request: $prompt")
         val client = HttpClient(CIO) {
             install(ContentNegotiation) {
                 json()
@@ -23,7 +28,14 @@ class SearchService {
                 append(HttpHeaders.Authorization, "Bearer ${System.getenv("AI_TOKEN")}")
             }
             contentType(ContentType.Application.Json)
-            setBody(prompt.toInputPrompt())
+            setBody(
+                HuggingFaceSearchRequest(
+                    inputs = prompt.query,
+                    parameters = Parameters(
+                        candidate_labels = tags.tags.map { it.name }
+                    )
+                )
+            )
         }
         client.close()
 
