@@ -1,5 +1,7 @@
 package com.zioanacleto.cocktails
 
+import com.zioanacleto.baseGetApi
+import com.zioanacleto.basePostApi
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -11,26 +13,38 @@ fun Routing.setupCocktailsRouting(database: Database) {
 
     // Add new cocktail
     post("/cocktails/add") {
-        val cocktail = call.receive<ExposedCocktail>()
-        val id = cocktailService.create(cocktail)
-        call.respond(HttpStatusCode.Created, id)
+        basePostApi {
+            val cocktail = call.receive<ExposedCocktail>()
+            val id = cocktailService.create(cocktail)
+            call.respond(HttpStatusCode.Created, id)
+
+            id
+        }
     }
 
     // Get all cocktails
     get("/cocktails") {
-        val cocktails = cocktailService.readAll()
-        call.respond(HttpStatusCode.OK, cocktails)
+        baseGetApi {
+            val cocktails = cocktailService.readAll()
+            call.respond(HttpStatusCode.OK, cocktails)
+
+            cocktails
+        }
     }
 
     // Get single cocktail by id
     get("/cocktails/{id}") {
-        val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
-        val cocktail = cocktailService.readSingle(id)
+        baseGetApi {
+            val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
+            val cocktail = cocktailService.readSingle(id)
 
-        cocktail?.let { returnedCocktail ->
-            call.respond(HttpStatusCode.OK, returnedCocktail)
-        } ?: run {
-            call.respond(HttpStatusCode.NotFound)
+            cocktail?.let { returnedCocktail ->
+                call.respond(HttpStatusCode.OK, returnedCocktail)
+            } ?: run {
+                call.respond(HttpStatusCode.NotFound)
+            }
+
+            cocktail
         }
     }
 
