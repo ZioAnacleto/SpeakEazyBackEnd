@@ -18,9 +18,9 @@ class SearchService {
             }
         }
 
-        val response = client.post(AI_URL) {
+        val response = client.post(System.getenv("AI_URL")) {
             headers {
-                append(HttpHeaders.Authorization, "Bearer $AI_TOKEN")
+                append(HttpHeaders.Authorization, "Bearer ${System.getenv("AI_TOKEN")}")
             }
             contentType(ContentType.Application.Json)
             setBody(prompt.toInputPrompt())
@@ -28,10 +28,5 @@ class SearchService {
         client.close()
 
         return response.body<String>()
-    }
-
-    companion object {
-        private const val AI_URL = "https://api-inference.huggingface.co/models/distilbert-base-uncased"
-        private const val AI_TOKEN = "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"
     }
 }
