@@ -6,7 +6,7 @@ import io.ktor.server.routing.*
 import org.jetbrains.exposed.sql.Database
 
 fun Routing.setupSearchRouting(database: Database) {
-    val searchService = SearchService()
+    val searchService = SearchService(database)
     val cocktailService = CocktailService(database)
 
     post("/search") {
