@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class SearchRequest(
     val query: String
 ) {
-    fun toInputPrompt() = """{"inputs: "$query"}"""
+    fun toInputPrompt() = """{"inputs": "$query"}"""
 }
