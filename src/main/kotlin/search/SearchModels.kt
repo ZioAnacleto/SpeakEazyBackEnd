@@ -17,3 +17,10 @@ data class HuggingFaceSearchRequest(
 data class Parameters(
     val candidate_labels: List<String>
 )
+
+@Serializable
+data class SearchResponse(
+    val sequence: String,
+    val labels: List<String>,
+    val scores: List<Double>
+)

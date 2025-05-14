@@ -1,7 +1,9 @@
 package com.zioanacleto.cocktails
 
+import com.zioanacleto.baseDeleteApi
 import com.zioanacleto.baseGetApi
 import com.zioanacleto.basePostApi
+import com.zioanacleto.basePutApi
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -50,17 +52,25 @@ fun Routing.setupCocktailsRouting(database: Database) {
 
     // Alter table deleting a column
     delete("/cocktails/dropColumn/{columnName}") {
-        val columnName = call.parameters["columnName"] ?: throw IllegalArgumentException("Invalid column name")
-        val deletedColumnName = cocktailService.deleteColumn(columnName)
+        baseDeleteApi {
+            val columnName = call.parameters["columnName"] ?: throw IllegalArgumentException("Invalid column name")
+            val deletedColumnName = cocktailService.deleteColumn(columnName)
 
-        call.respond(HttpStatusCode.Accepted, deletedColumnName)
+            call.respond(HttpStatusCode.Accepted, deletedColumnName)
+
+            deletedColumnName
+        }
     }
 
     // Updates single cocktail with new data, updating visualizations number
     put("/cocktails/{id}") {
-        val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
+        basePutApi {
+            val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
 
-        val updatedCocktails = cocktailService.updateVisualizations(id)
-        call.respond(HttpStatusCode.OK, updatedCocktails)
+            val updatedCocktails = cocktailService.updateVisualizations(id)
+            call.respond(HttpStatusCode.OK, updatedCocktails)
+
+            updatedCocktails
+        }
     }
 }

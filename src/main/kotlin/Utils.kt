@@ -20,8 +20,21 @@ suspend fun <Response> RoutingContext.baseGetApi(
 
 suspend fun <Response> RoutingContext.basePostApi(
     specificApiBlock: suspend RoutingContext.() -> Response
+) = baseApiWithRequestAndResponse("POST", specificApiBlock)
+
+suspend fun <Response> RoutingContext.baseDeleteApi(
+    specificApiBlock: suspend RoutingContext.() -> Response
+) = baseApiWithRequestAndResponse("DELETE", specificApiBlock)
+
+suspend fun <Response> RoutingContext.basePutApi(
+    specificApiBlock: suspend RoutingContext.() -> Response
+) = baseApiWithRequestAndResponse("PUT", specificApiBlock)
+
+private suspend fun <Response> RoutingContext.baseApiWithRequestAndResponse(
+    verb: String,
+    specificApiBlock: suspend RoutingContext.() -> Response
 ) {
-    println("Api call in POST: ${call.request.uri}")
+    println("Api call in $verb: ${call.request.uri}")
     println("Request: ${call.receive<Any>()}")
     val response = specificApiBlock()
     println("Response: $response")
