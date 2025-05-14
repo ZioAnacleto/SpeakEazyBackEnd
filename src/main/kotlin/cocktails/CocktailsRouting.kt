@@ -15,7 +15,7 @@ fun Routing.setupCocktailsRouting(database: Database) {
 
     // Add new cocktail
     post("/cocktails/add") {
-        basePostApi {
+        basePostApi(ExposedCocktail::class) {
             val cocktail = call.receive<ExposedCocktail>()
             val id = cocktailService.create(cocktail)
             call.respond(HttpStatusCode.Created, id)
@@ -52,7 +52,7 @@ fun Routing.setupCocktailsRouting(database: Database) {
 
     // Alter table deleting a column
     delete("/cocktails/dropColumn/{columnName}") {
-        baseDeleteApi {
+        baseDeleteApi(String::class) {
             val columnName = call.parameters["columnName"] ?: throw IllegalArgumentException("Invalid column name")
             val deletedColumnName = cocktailService.deleteColumn(columnName)
 

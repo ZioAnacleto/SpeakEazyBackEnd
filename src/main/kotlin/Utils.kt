@@ -4,6 +4,7 @@ import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import kotlin.reflect.KClass
 
 suspend fun <T> dbQuery(block: suspend () -> T): T =
     newSuspendedTransaction(Dispatchers.IO) { block() }
@@ -18,13 +19,15 @@ suspend fun <Response> RoutingContext.baseGetApi(
     println("Response: $response")
 }
 
-suspend fun <Response> RoutingContext.basePostApi(
+suspend fun <Request: Any, Response> RoutingContext.basePostApi(
+    requestClazz: KClass<Request>,
     specificApiBlock: suspend RoutingContext.() -> Response
-) = baseApiWithRequestAndResponse("POST", specificApiBlock)
+) = baseApiWithRequestAndResponse("POST", requestClazz, specificApiBlock)
 
-suspend fun <Response> RoutingContext.baseDeleteApi(
+suspend fun <Request: Any, Response> RoutingContext.baseDeleteApi(
+    requestClazz: KClass<Request>,
     specificApiBlock: suspend RoutingContext.() -> Response
-) = baseApiWithRequestAndResponse("DELETE", specificApiBlock)
+) = baseApiWithRequestAndResponse("DELETE", requestClazz, specificApiBlock)
 
 suspend fun <Response> RoutingContext.basePutApi(
     specificApiBlock: suspend RoutingContext.() -> Response
@@ -34,12 +37,13 @@ suspend fun <Response> RoutingContext.basePutApi(
     println("Response: $response")
 }
 
-private suspend fun <Response> RoutingContext.baseApiWithRequestAndResponse(
+private suspend fun <Request: Any, Response> RoutingContext.baseApiWithRequestAndResponse(
     verb: String,
+    requestClazz: KClass<Request>,
     specificApiBlock: suspend RoutingContext.() -> Response
 ) {
     println("Api call in $verb: ${call.request.uri}")
-    println("Request: ${call.receive<Any>()}")
+    println("Request: ${call.receive(requestClazz)}")
     val response = specificApiBlock()
     println("Response: $response")
 }
