@@ -23,7 +23,7 @@ class SearchService(private val database: Database) {
 
         val cocktails = cocktailsService.readAll()
         val ingredients = ingredientsService.readAll()
-        val tags = tagsService.readAll()
+        // val tags = tagsService.readAll()
 
         println("Search service, request: $prompt")
         val client = HttpClient(CIO) {
@@ -41,7 +41,7 @@ class SearchService(private val database: Database) {
                 HuggingFaceSearchRequest(
                     inputs = prompt.query,
                     parameters = Parameters(
-                        candidate_labels = tags.tags.map { it.name }.plus(ingredients.ingredients.map { it.name })
+                        candidate_labels = ingredients.ingredients.map { it.name }
                     )
                 )
             )
