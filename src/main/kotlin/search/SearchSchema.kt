@@ -3,10 +3,8 @@ package com.zioanacleto.search
 import com.zioanacleto.cocktails.CocktailService
 import com.zioanacleto.cocktails.ExposedCocktailList
 import com.zioanacleto.ingredients.IngredientsService
-import com.zioanacleto.tags.ExposedTag
 import com.zioanacleto.tags.TagsService
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -27,7 +25,7 @@ class SearchService(private val database: Database) {
 
             val cocktails = cocktailsService.readAll()
             val ingredients = ingredientsService.readAll()
-            // val tags = tagsService.readAll()
+            val tags = tagsService.readAll()
 
             println("Search service, request: $prompt")
             val client = HttpClient(CIO) {
@@ -36,8 +34,12 @@ class SearchService(private val database: Database) {
                 }
             }
 
-            val url = System.getenv("AI_URL") ?: throw IllegalStateException("AI_URL not found in environment")
-            val token = System.getenv("AI_TOKEN") ?: throw IllegalStateException("AI_TOKEN not found in environment")
+            val url = requireNotNull(System.getenv("AI_URL")) {
+                "AI_URL not found in environment"
+            }
+            val token = requireNotNull(System.getenv("AI_TOKEN")) {
+                "AI_TOKEN not found in environment"
+            }
 
             val rawResponse = client.post(url) {
                 headers {
@@ -48,7 +50,7 @@ class SearchService(private val database: Database) {
                     HuggingFaceSearchRequest(
                         inputs = prompt.query,
                         parameters = Parameters(
-                            candidate_labels = ingredients.ingredients.map { it.name }
+                            candidate_labels = tags.tags.map { it.name } + ingredients.ingredients.map { it.name }
                         )
                     )
                 )
