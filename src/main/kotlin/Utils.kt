@@ -28,7 +28,11 @@ suspend fun <Response> RoutingContext.baseDeleteApi(
 
 suspend fun <Response> RoutingContext.basePutApi(
     specificApiBlock: suspend RoutingContext.() -> Response
-) = baseApiWithRequestAndResponse("PUT", specificApiBlock)
+) {
+    println("Api call in PUT: ${call.request.uri}")
+    val response = specificApiBlock()
+    println("Response: $response")
+}
 
 private suspend fun <Response> RoutingContext.baseApiWithRequestAndResponse(
     verb: String,
