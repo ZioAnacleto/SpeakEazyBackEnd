@@ -1,7 +1,6 @@
 package com.zioanacleto.search
 
 import com.zioanacleto.basePostApi
-import com.zioanacleto.cocktails.ExposedCocktailList
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -12,8 +11,8 @@ fun Routing.setupSearchRouting(database: Database) {
     val searchService = SearchService(database)
 
     post("/search") {
-        basePostApi(ExposedCocktailList::class) {
-            val request = call.receive<SearchRequest>()
+        val request = call.receive<SearchRequest>()
+        basePostApi(request) {
             val cocktails = searchService.searchForCocktails(request)
             call.respond(HttpStatusCode.OK, cocktails)
 

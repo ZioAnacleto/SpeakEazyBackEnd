@@ -19,15 +19,15 @@ suspend fun <Response> RoutingContext.baseGetApi(
     println("Response: $response")
 }
 
-suspend fun <Request: Any, Response> RoutingContext.basePostApi(
-    requestClazz: KClass<Request>,
+suspend fun <Request, Response> RoutingContext.basePostApi(
+    request: Request,
     specificApiBlock: suspend RoutingContext.() -> Response
-) = baseApiWithRequestAndResponse("POST", requestClazz, specificApiBlock)
+) = baseApiWithRequestAndResponse("POST", request, specificApiBlock)
 
-suspend fun <Request: Any, Response> RoutingContext.baseDeleteApi(
-    requestClazz: KClass<Request>,
+suspend fun <Request, Response> RoutingContext.baseDeleteApi(
+    request: Request,
     specificApiBlock: suspend RoutingContext.() -> Response
-) = baseApiWithRequestAndResponse("DELETE", requestClazz, specificApiBlock)
+) = baseApiWithRequestAndResponse("DELETE", request, specificApiBlock)
 
 suspend fun <Response> RoutingContext.basePutApi(
     specificApiBlock: suspend RoutingContext.() -> Response
@@ -37,13 +37,13 @@ suspend fun <Response> RoutingContext.basePutApi(
     println("Response: $response")
 }
 
-private suspend fun <Request: Any, Response> RoutingContext.baseApiWithRequestAndResponse(
+private suspend fun <Request, Response> RoutingContext.baseApiWithRequestAndResponse(
     verb: String,
-    requestClazz: KClass<Request>,
+    request: Request,
     specificApiBlock: suspend RoutingContext.() -> Response
 ) {
     println("Api call in $verb: ${call.request.uri}")
-    println("Request: ${call.receive(requestClazz)}")
+    println("Request: $request")
     val response = specificApiBlock()
     println("Response: $response")
 }

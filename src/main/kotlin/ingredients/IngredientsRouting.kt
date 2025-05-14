@@ -13,8 +13,8 @@ fun Routing.setupIngredientsRouting(database: Database) {
 
     // Add new ingredient
     post("ingredients/add") {
-        basePostApi(Int::class) {
-            val ingredient = call.receive<ExposedIngredient>()
+        val ingredient = call.receive<ExposedIngredient>()
+        basePostApi(ingredient) {
             val id = ingredientsService.create(ingredient)
             call.respond(HttpStatusCode.Created, id)
 
