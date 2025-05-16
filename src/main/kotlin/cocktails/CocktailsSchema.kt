@@ -22,6 +22,7 @@ class CocktailService(database: Database) {
         val method = varchar(DB_KEY_METHOD, length = 500)
         val ingredients = largeText(DB_KEY_INGREDIENTS)
         val visualizations = long(DB_KEY_VISUALIZATIONS)
+        val tags = largeText(DB_KEY_TAGS)
     }
 
     init {
@@ -47,6 +48,7 @@ class CocktailService(database: Database) {
             it[method] = cocktail.method
             it[ingredients] = Json.encodeToString(cocktail.ingredients)
             it[visualizations] = cocktail.visualizations
+            it[tags] = Json.encodeToString(cocktail.tags)
         }[Cocktails.id]
     }
 
@@ -165,7 +167,8 @@ class CocktailService(database: Database) {
             type = this[Cocktails.type],
             method = this[Cocktails.method],
             ingredients = Json.decodeFromString(this[Cocktails.ingredients]),
-            visualizations = this[Cocktails.visualizations]
+            visualizations = this[Cocktails.visualizations],
+            tags = Json.decodeFromString(this[Cocktails.tags])
         )
 
     companion object {
@@ -181,5 +184,6 @@ class CocktailService(database: Database) {
         private const val DB_KEY_METHOD = "method"
         private const val DB_KEY_INGREDIENTS = "ingredients"
         private const val DB_KEY_VISUALIZATIONS = "visualizations"
+        private const val DB_KEY_TAGS = "tags"
     }
 }

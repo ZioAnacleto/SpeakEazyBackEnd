@@ -23,6 +23,16 @@ data class ExposedCocktailIngredient(
 )
 
 @Serializable
+data class ExposedCocktailTags(
+    val tags: List<ExposedCocktailTag>
+)
+
+@Serializable
+data class ExposedCocktailTag(
+    val id: String
+)
+
+@Serializable
 data class ExposedCocktail(
     val id: String,
     val name: String,
@@ -35,11 +45,13 @@ data class ExposedCocktail(
     val type: String,
     val method: String,
     var ingredients: ExposedCocktailIngredients,
-    var visualizations: Long
+    var visualizations: Long,
+    var tags: ExposedCocktailTags
 ) {
     override fun toString(): String {
         return "Cocktail id: $id\n name: $name\ncategory: $category\nglass: $glass\ninstructions: $instructions\n" +
                 "instructionsIT: $instructionsIt\nisAlcoholic: $isAlcoholic\nimageLink: $imageLink\n" +
-                "type: $type\nmethod: $method\ningredients: $ingredients\nvisualizations: $visualizations"
+                "type: $type\nmethod: $method\ningredients: $ingredients\nvisualizations: $visualizations\n" +
+                "tags: $tags"
     }
 }
