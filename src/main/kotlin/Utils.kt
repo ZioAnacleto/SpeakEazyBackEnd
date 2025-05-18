@@ -4,6 +4,7 @@ import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.util.Calendar
 import kotlin.reflect.KClass
 
 suspend fun <T> dbQuery(block: suspend () -> T): T =
@@ -33,9 +34,9 @@ private suspend fun <Response> RoutingContext.baseApiWithResponse(
     verb: String,
     specificApiBlock: suspend RoutingContext.() -> Response
 ) {
-    println("Api call in $verb: ${call.request.uri}, time: ${System.currentTimeMillis()}")
+    println("Api call in $verb: ${call.request.uri}, time: ${Calendar.getInstance().time}")
     val response = specificApiBlock()
-    println("Response: $response, time: ${System.currentTimeMillis()}")
+    println("Response: $response, time: ${Calendar.getInstance().time}")
 }
 
 private suspend fun <Request, Response> RoutingContext.baseApiWithRequestAndResponse(
@@ -43,8 +44,8 @@ private suspend fun <Request, Response> RoutingContext.baseApiWithRequestAndResp
     request: Request,
     specificApiBlock: suspend RoutingContext.() -> Response
 ) {
-    println("Api call in $verb: ${call.request.uri}, time: ${System.currentTimeMillis()}")
+    println("Api call in $verb: ${call.request.uri}, time: ${Calendar.getInstance().time}")
     println("Request: $request")
     val response = specificApiBlock()
-    println("Response: $response, time: ${System.currentTimeMillis()}")
+    println("Response: $response, time: ${Calendar.getInstance().time}")
 }
