@@ -13,11 +13,7 @@ fun String?.default(value: String? = null): String = this ?: value ?: ""
 
 suspend fun <Response> RoutingContext.baseGetApi(
     specificApiBlock: suspend RoutingContext.() -> Response
-) {
-    println("Api call in GET: ${call.request.uri}")
-    val response = specificApiBlock()
-    println("Response: $response")
-}
+) = baseApiWithResponse("GET", specificApiBlock)
 
 suspend fun <Request, Response> RoutingContext.basePostApi(
     request: Request,
@@ -31,8 +27,13 @@ suspend fun <Request, Response> RoutingContext.baseDeleteApi(
 
 suspend fun <Response> RoutingContext.basePutApi(
     specificApiBlock: suspend RoutingContext.() -> Response
+) = baseApiWithResponse("PUT", specificApiBlock)
+
+private suspend fun <Response> RoutingContext.baseApiWithResponse(
+    verb: String,
+    specificApiBlock: suspend RoutingContext.() -> Response
 ) {
-    println("Api call in PUT: ${call.request.uri}")
+    println("Api call in $verb: ${call.request.uri}")
     val response = specificApiBlock()
     println("Response: $response")
 }

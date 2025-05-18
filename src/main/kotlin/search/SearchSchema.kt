@@ -12,6 +12,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
@@ -26,9 +27,9 @@ class SearchService(private val database: Database) {
             val tagsService = TagsService(database)
 
             // retrieve data from DB (cocktails, ingredients, tags)
-            val cocktails = cocktailsService.readAll()
-            val ingredients = ingredientsService.readAll()
-            val tags = tagsService.readAll()
+            val cocktails = asyncCall { cocktailsService.readAll() }
+            val ingredients = asyncCall { ingredientsService.readAll() }
+            val tags = asyncCall { tagsService.readAll() }
 
             println("Search service, request: $prompt")
 
@@ -126,8 +127,11 @@ class SearchService(private val database: Database) {
 
     private fun SearchResponse.computeAcceptableLabels() =
         labels.zip(this.scores)
-        .filter { (_, score) -> score > SCORE_THRESHOLD }
-        .map { (label, _) -> label }
+            .filter { (_, score) -> score > SCORE_THRESHOLD }
+            .map { (label, _) -> label }
+
+    private suspend fun <Response> asyncCall(block: suspend CoroutineScope.() -> Response) =
+        coroutineScope { async { block() }.await() }
 
     companion object {
         private const val SCORE_THRESHOLD = 0.30
