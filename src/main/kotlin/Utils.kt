@@ -33,9 +33,9 @@ private suspend fun <Response> RoutingContext.baseApiWithResponse(
     verb: String,
     specificApiBlock: suspend RoutingContext.() -> Response
 ) {
-    println("Api call in $verb: ${call.request.uri}")
+    println("Api call in $verb: ${call.request.uri}, time: ${System.currentTimeMillis()}")
     val response = specificApiBlock()
-    println("Response: $response")
+    println("Response: $response, time: ${System.currentTimeMillis()}")
 }
 
 private suspend fun <Request, Response> RoutingContext.baseApiWithRequestAndResponse(
@@ -43,8 +43,8 @@ private suspend fun <Request, Response> RoutingContext.baseApiWithRequestAndResp
     request: Request,
     specificApiBlock: suspend RoutingContext.() -> Response
 ) {
-    println("Api call in $verb: ${call.request.uri}")
+    println("Api call in $verb: ${call.request.uri}, time: ${System.currentTimeMillis()}")
     println("Request: $request")
     val response = specificApiBlock()
-    println("Response: $response")
+    println("Response: $response, time: ${System.currentTimeMillis()}")
 }
