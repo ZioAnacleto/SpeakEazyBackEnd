@@ -24,7 +24,7 @@ data class ExposedCocktailIngredient(
 
 @Serializable
 data class ExposedCocktailTags(
-    val tags: List<ExposedCocktailTag>
+    val tags: List<ExposedCocktailTag> = emptyList()
 )
 
 @Serializable
