@@ -28,7 +28,7 @@ fun Routing.setupSearchRouting(database: Database) {
         baseGetApi {
             val nameQuery = call.request.queryParameters["name"]
             val ingredientQuery = call.request.queryParameters.getAll("ingredient") ?: emptyList()
-            val tagQuery = call.request.queryParameters["tag"]
+            val tagQuery = call.request.queryParameters.getAll("tag") ?: emptyList()
 
             // reading from DB
             val allCocktails = CocktailService(database).readAll()
@@ -36,14 +36,14 @@ fun Routing.setupSearchRouting(database: Database) {
 
             val filtered = allCocktails.cocktails.filter { cocktail ->
                 val matchName = nameQuery?.let { cocktail.name.contains(it, ignoreCase = true) } ?: false
-                val matchIngredient = ingredientQuery.isEmpty() || ingredientQuery.any {
+                val matchIngredient = ingredientQuery.isNotEmpty() && ingredientQuery.any {
                     cocktail.ingredients.ingredients.any { ing -> ing.name.equals(it, ignoreCase = true) }
                 }
-                val matchTag = tagQuery?.let {
-                    cocktail.tags.tags.any { tagId->
+                val matchTag = tagQuery.isNotEmpty() && tagQuery.any {
+                    cocktail.tags.tags.any { tagId ->
                         allTags.tags.any { it.id == tagId.id }
                     }
-                } ?: false
+                }
 
                 matchName || matchIngredient || matchTag
             }
