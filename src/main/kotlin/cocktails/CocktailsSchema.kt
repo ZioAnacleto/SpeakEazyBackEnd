@@ -115,7 +115,37 @@ class CocktailService(database: Database) {
             ExposedCocktailList(
                 Cocktails.selectAll()
                     .mapNotNull {
-                        it.createCocktail()
+                        val cocktail = it.createCocktail()
+
+                        // Select ingredients' ids of selected Cocktail
+                        val ingredientsIds = cocktail?.ingredients?.ingredients?.map { it.id.toInt() } ?: listOf()
+
+                        // Create ExposedCocktailIngredient objects from Ingredients table
+                        val ingredients = IngredientsService.Ingredients.selectAll()
+                            .where { IngredientsService.Ingredients.id inList ingredientsIds }
+                            .map {
+                                val cocktailIngredient = cocktail?.ingredients?.ingredients?.find { ing ->
+                                    ing.id == it[IngredientsService.Ingredients.id].toString()
+                                }
+
+                                ExposedCocktailIngredient(
+                                    id = it[IngredientsService.Ingredients.id].toString(),
+                                    name = it[IngredientsService.Ingredients.name],
+                                    imageUrl = it[IngredientsService.Ingredients.image],
+                                    quantityCl = cocktailIngredient?.quantityCl.default("-"),
+                                    quantityOz = cocktailIngredient?.quantityOz.default("-"),
+                                    quantitySpecial = cocktailIngredient?.quantitySpecial
+                                )
+                            }
+
+                        // Mapping ingredients information inside cocktail object
+                        cocktail.apply {
+                            this.ingredients = ExposedCocktailIngredients(
+                                ingredients = ingredients
+                            )
+                        }
+
+                        cocktail
                     }
             )
         }
