@@ -41,14 +41,18 @@ fun Routing.setupSearchRouting(database: Database) {
 
             val filtered = allCocktails.cocktails.filter { cocktail ->
                 val matchName = nameQuery?.let { cocktail.name.contains(it, ignoreCase = true) } ?: true
-                val matchIngredient = ingredientQuery.isEmpty() || ingredientQuery.any {
-                    cocktail.ingredients.ingredients.any { ing -> ing.name.equals(it, ignoreCase = true) }
+                val matchIngredient = ingredientQuery.isEmpty() || ingredientQuery.any { query ->
+                    cocktail.ingredients.ingredients.any { ing -> ing.name.equals(query, ignoreCase = true) }
                 }
                 val matchTag = tagQuery.isEmpty() || tagQuery.any {
                     cocktail.tags.tags.any { tagId ->
                         allTags.tags.any { it.id == tagId.id }
                     }
                 }
+
+                println("matchName: $matchName")
+                println("matchIngredient: $matchIngredient")
+                println("matchTag: $matchTag")
 
                 matchName && matchIngredient && matchTag
             }
