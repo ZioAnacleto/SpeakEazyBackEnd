@@ -2,7 +2,10 @@ package com.zioanacleto
 
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.util.Calendar
 import kotlin.reflect.KClass
@@ -49,3 +52,6 @@ private suspend fun <Request, Response> RoutingContext.baseApiWithRequestAndResp
     val response = specificApiBlock()
     println("Response: $response, time: ${Calendar.getInstance().time}")
 }
+
+suspend fun <Response> asyncCall(block: suspend CoroutineScope.() -> Response) =
+    coroutineScope { async { block() }.await() }

@@ -1,5 +1,6 @@
 package com.zioanacleto.search
 
+import com.zioanacleto.asyncCall
 import com.zioanacleto.baseGetApi
 import com.zioanacleto.basePostApi
 import com.zioanacleto.cocktails.CocktailService
@@ -30,22 +31,26 @@ fun Routing.setupSearchRouting(database: Database) {
             val ingredientQuery = call.request.queryParameters.getAll("ingredient") ?: emptyList()
             val tagQuery = call.request.queryParameters.getAll("tag") ?: emptyList()
 
+            println("nameQuery: $nameQuery")
+            println("ingredientQuery: $ingredientQuery")
+            println("tagQuery: $tagQuery")
+
             // reading from DB
-            val allCocktails = CocktailService(database).readAll()
-            val allTags = TagsService(database).readAll()
+            val allCocktails = asyncCall { CocktailService(database).readAll() }
+            val allTags = asyncCall { TagsService(database).readAll() }
 
             val filtered = allCocktails.cocktails.filter { cocktail ->
-                val matchName = nameQuery?.let { cocktail.name.contains(it, ignoreCase = true) } ?: false
-                val matchIngredient = ingredientQuery.isNotEmpty() && ingredientQuery.any {
+                val matchName = nameQuery?.let { cocktail.name.contains(it, ignoreCase = true) } ?: true
+                val matchIngredient = ingredientQuery.isEmpty() || ingredientQuery.any {
                     cocktail.ingredients.ingredients.any { ing -> ing.name.equals(it, ignoreCase = true) }
                 }
-                val matchTag = tagQuery.isNotEmpty() && tagQuery.any {
+                val matchTag = tagQuery.isEmpty() || tagQuery.any {
                     cocktail.tags.tags.any { tagId ->
                         allTags.tags.any { it.id == tagId.id }
                     }
                 }
 
-                matchName || matchIngredient || matchTag
+                matchName && matchIngredient && matchTag
             }
 
             call.respond(HttpStatusCode.OK, ExposedCocktailList(filtered))

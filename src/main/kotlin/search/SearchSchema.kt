@@ -1,5 +1,6 @@
 package com.zioanacleto.search
 
+import com.zioanacleto.asyncCall
 import com.zioanacleto.cocktails.CocktailService
 import com.zioanacleto.cocktails.ExposedCocktailList
 import com.zioanacleto.ingredients.IngredientsService
@@ -129,9 +130,6 @@ class SearchService(private val database: Database) {
         labels.zip(this.scores)
             .filter { (_, score) -> score > SCORE_THRESHOLD }
             .map { (label, _) -> label }
-
-    private suspend fun <Response> asyncCall(block: suspend CoroutineScope.() -> Response) =
-        coroutineScope { async { block() }.await() }
 
     companion object {
         private const val SCORE_THRESHOLD = 0.30
