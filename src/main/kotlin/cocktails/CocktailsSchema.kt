@@ -51,6 +51,8 @@ class CocktailService(database: Database) {
             it[ingredients] = Json.encodeToString(cocktail.ingredients)
             it[visualizations] = cocktail.visualizations
             it[tags] = Json.encodeToString(cocktail.tags)
+            it[userId] = cocktail.userId
+            it[username] = cocktail.username
         }[Cocktails.id]
     }
 
@@ -187,8 +189,13 @@ class CocktailService(database: Database) {
         )
     }
 
-    private fun ResultRow.createCocktail() =
-        ExposedCocktail(
+    private fun ResultRow.createCocktail(): ExposedCocktail {
+        val username = try {
+            this[Cocktails.username]
+        } catch (exception: Exception) {
+            ""
+        }
+        return ExposedCocktail(
             id = this[Cocktails.id].toString(),
             name = this[Cocktails.name],
             category = this[Cocktails.category],
@@ -203,8 +210,9 @@ class CocktailService(database: Database) {
             visualizations = this[Cocktails.visualizations],
             tags = Json.decodeFromString(this[Cocktails.tags]),
             userId = this[Cocktails.userId],
-            username = this[Cocktails.username]
+            username = username
         )
+    }
 
     companion object {
         private const val DB_KEY_ID = "id"
