@@ -46,12 +46,14 @@ data class ExposedCocktail(
     val method: String,
     var ingredients: ExposedCocktailIngredients,
     var visualizations: Long,
-    var tags: ExposedCocktailTags
+    var tags: ExposedCocktailTags,
+    var userId: String,
+    var username: String
 ) {
     override fun toString(): String {
         return "Cocktail id: $id\n name: $name\ncategory: $category\nglass: $glass\ninstructions: $instructions\n" +
                 "instructionsIT: $instructionsIt\nisAlcoholic: $isAlcoholic\nimageLink: $imageLink\n" +
                 "type: $type\nmethod: $method\ningredients: $ingredients\nvisualizations: $visualizations\n" +
-                "tags: $tags"
+                "tags: $tags\nuserId: $userId\nusername: $username"
     }
 }

@@ -5,7 +5,6 @@ import com.zioanacleto.baseGetApi
 import com.zioanacleto.basePostApi
 import com.zioanacleto.cocktails.CocktailService
 import com.zioanacleto.cocktails.ExposedCocktailList
-import com.zioanacleto.ingredients.IngredientsService
 import com.zioanacleto.tags.TagsService
 import io.ktor.http.*
 import io.ktor.server.request.*

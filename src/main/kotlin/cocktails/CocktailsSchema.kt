@@ -23,6 +23,8 @@ class CocktailService(database: Database) {
         val ingredients = largeText(DB_KEY_INGREDIENTS)
         val visualizations = long(DB_KEY_VISUALIZATIONS)
         val tags = largeText(DB_KEY_TAGS)
+        val userId = varchar(DB_KEY_USER_ID, length = 500)
+        val username = varchar(DB_KEY_USERNAME, length = 500)
     }
 
     init {
@@ -118,7 +120,8 @@ class CocktailService(database: Database) {
                         val cocktail = it.createCocktail()
 
                         // Select ingredients' ids of selected Cocktail
-                        val ingredientsIds = cocktail?.ingredients?.ingredients?.map { it.id.toInt() } ?: listOf()
+                        val ingredientsIds =
+                            cocktail.ingredients.ingredients.map { ingredient -> ingredient.id.toInt() }
 
                         // Create ExposedCocktailIngredient objects from Ingredients table
                         val ingredients = IngredientsService.Ingredients.selectAll()
@@ -198,7 +201,9 @@ class CocktailService(database: Database) {
             method = this[Cocktails.method],
             ingredients = Json.decodeFromString(this[Cocktails.ingredients]),
             visualizations = this[Cocktails.visualizations],
-            tags = Json.decodeFromString(this[Cocktails.tags])
+            tags = Json.decodeFromString(this[Cocktails.tags]),
+            userId = this[Cocktails.userId],
+            username = this[Cocktails.username]
         )
 
     companion object {
@@ -215,5 +220,7 @@ class CocktailService(database: Database) {
         private const val DB_KEY_INGREDIENTS = "ingredients"
         private const val DB_KEY_VISUALIZATIONS = "visualizations"
         private const val DB_KEY_TAGS = "tags"
+        private const val DB_KEY_USER_ID = "userid"
+        private const val DB_KEY_USERNAME = "username"
     }
 }
