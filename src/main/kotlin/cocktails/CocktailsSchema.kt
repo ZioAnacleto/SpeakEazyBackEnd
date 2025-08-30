@@ -192,9 +192,12 @@ class CocktailService(database: Database) {
     private fun ResultRow.createCocktail(): ExposedCocktail {
         val username = try {
             this[Cocktails.username]
-        } catch (exception: Exception) {
+        } catch (exception: NullPointerException) {
+            println("Exception caught, returning empty value.")
             ""
         }
+
+        println("Username: $username")
         return ExposedCocktail(
             id = this[Cocktails.id].toString(),
             name = this[Cocktails.name],
