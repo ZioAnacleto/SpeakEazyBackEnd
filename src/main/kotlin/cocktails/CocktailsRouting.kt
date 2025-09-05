@@ -16,6 +16,7 @@ fun Routing.setupCocktailsRouting(database: Database) {
     // Add new cocktail
     post("/cocktails/add") {
         val cocktail = call.receive<ExposedCocktail>()
+        println("Adding cocktail: $cocktail")
         basePostApi(cocktail) {
             val id = cocktailService.create(cocktail)
             call.respond(HttpStatusCode.Created, id)
