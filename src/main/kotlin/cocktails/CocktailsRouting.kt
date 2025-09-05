@@ -15,10 +15,16 @@ fun Routing.setupCocktailsRouting(database: Database) {
 
     // Add new cocktail
     post("/cocktails/add") {
-        val cocktail = call.receive<ExposedCocktail>()
+        val cocktail = try {
+            call.receive<ExposedCocktail>()
+        } catch (exception: Exception) {
+            println("Error while adding cocktail: $exception")
+            null
+        }
+
         println("Adding cocktail: $cocktail")
         basePostApi(cocktail) {
-            val id = cocktailService.create(cocktail)
+            val id = cocktailService.create(cocktail!!)
             call.respond(HttpStatusCode.Created, id)
 
             id
