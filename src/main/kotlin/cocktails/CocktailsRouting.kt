@@ -15,6 +15,8 @@ fun Routing.setupCocktailsRouting(database: Database) {
 
     // Add new cocktail
     post("/cocktails/add") {
+        println("Call cocktails/add, request: ${call.request}")
+
         val cocktail = try {
             call.receive<ExposedCocktail>()
         } catch (exception: Exception) {
