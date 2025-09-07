@@ -8,6 +8,7 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
 
 fun Routing.setupCocktailsRouting(database: Database) {
@@ -15,7 +16,7 @@ fun Routing.setupCocktailsRouting(database: Database) {
 
     // Add new cocktail
     post("/cocktails/add") {
-        println("Call cocktails/add, request: ${call.request}")
+        println("Call cocktails/add, request body: ${call.receive(Json::class)}")
 
         val cocktail = try {
             call.receive<ExposedCocktail>()
