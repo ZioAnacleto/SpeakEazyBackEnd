@@ -17,7 +17,7 @@ fun Routing.setupCocktailsRouting(database: Database) {
     // Add new cocktail
     post("/cocktails/add") {
         val cocktailText = call.receiveText()
-        println(call.receiveText())
+        println(cocktailText)
         val cocktail = Json.decodeFromString<ExposedCocktail>(cocktailText)
         println("Adding cocktail: $cocktail")
 
