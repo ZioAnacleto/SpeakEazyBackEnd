@@ -48,9 +48,9 @@ class CocktailService(database: Database) {
             it[imageLink] = cocktail.imageLink
             it[type] = cocktail.type
             it[method] = cocktail.method
+            it[tags] = Json.encodeToString(cocktail.tags)
             it[ingredients] = Json.encodeToString(cocktail.ingredients)
             it[visualizations] = cocktail.visualizations
-            it[tags] = Json.encodeToString(cocktail.tags)
             it[userId] = cocktail.userId
             it[username] = cocktail.username
         }[Cocktails.id]

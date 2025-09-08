@@ -51,7 +51,7 @@ data class ExposedCocktail(
     var username: String
 ) {
     override fun toString(): String {
-        return "Cocktail id: $id\n name: $name\ncategory: $category\nglass: $glass\ninstructions: $instructions\n" +
+        return "\nCocktail id: $id\nname: $name\ncategory: $category\nglass: $glass\ninstructions: $instructions\n" +
                 "instructionsIT: $instructionsIt\nisAlcoholic: $isAlcoholic\nimageLink: $imageLink\n" +
                 "type: $type\nmethod: $method\ningredients: $ingredients\nvisualizations: $visualizations\n" +
                 "tags: $tags\nuserId: $userId\nusername: $username"
