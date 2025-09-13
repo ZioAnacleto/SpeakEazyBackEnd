@@ -20,9 +20,9 @@ class CocktailService(database: Database) {
         val imageLink = varchar(DB_KEY_IMAGE_LINK, length = 1000)
         val type = varchar(DB_KEY_TYPE, length = 500)
         val method = varchar(DB_KEY_METHOD, length = 500)
-        val ingredients = largeText(DB_KEY_INGREDIENTS)
+        val ingredients = jsonb(DB_KEY_INGREDIENTS)
         val visualizations = long(DB_KEY_VISUALIZATIONS)
-        val tags = largeText(DB_KEY_TAGS)
+        val tags = jsonb(DB_KEY_TAGS)
         val userId = varchar(DB_KEY_USER_ID, length = 500)
         val username = varchar(DB_KEY_USERNAME, length = 500)
     }
@@ -129,7 +129,7 @@ class CocktailService(database: Database) {
                         val ingredients = IngredientsService.Ingredients.selectAll()
                             .where { IngredientsService.Ingredients.id inList ingredientsIds }
                             .map {
-                                val cocktailIngredient = cocktail?.ingredients?.ingredients?.find { ing ->
+                                val cocktailIngredient = cocktail.ingredients.ingredients.find { ing ->
                                     ing.id == it[IngredientsService.Ingredients.id].toString()
                                 }
 
