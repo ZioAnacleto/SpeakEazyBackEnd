@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class CocktailService(database: Database) {
     object Cocktails : Table() {
-        val id = integer(DB_KEY_ID)
+        val id = integer(DB_KEY_ID).autoIncrement()
         val name = varchar(DB_KEY_NAME, length = 500)
         val category = varchar(DB_KEY_CATEGORY, length = 500)
         val instructions = varchar(DB_KEY_INSTRUCTIONS, length = 500)
@@ -38,7 +38,6 @@ class CocktailService(database: Database) {
      */
     suspend fun create(cocktail: ExposedCocktail): Int = dbQuery {
         Cocktails.insert {
-            it[id] = cocktail.id.toInt()
             it[name] = cocktail.name
             it[category] = cocktail.category
             it[instructions] = cocktail.instructions

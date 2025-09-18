@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class IngredientsService(database: Database) {
     object Ingredients : Table() {
-        val id = integer(DB_KEY_ID)
+        val id = integer(DB_KEY_ID).autoIncrement()
         val name = varchar(DB_KEY_NAME, 500)
         val image = varchar(DB_KEY_IMAGE, 2000)
     }
@@ -19,7 +19,6 @@ class IngredientsService(database: Database) {
 
     suspend fun create(ingredient: ExposedIngredient): Int = dbQuery {
         Ingredients.insert {
-            it[id] = ingredient.id.toInt()
             it[name] = ingredient.name
             it[image] = ingredient.imageUrl
         }[Ingredients.id]

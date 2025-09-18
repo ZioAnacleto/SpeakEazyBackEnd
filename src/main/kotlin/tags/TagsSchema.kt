@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class TagsService(database: Database) {
     object Tags : Table() {
-        val id = integer(DB_KEY_ID)
+        val id = integer(DB_KEY_ID).autoIncrement()
         val name = varchar(DB_KEY_NAME, length = 100)
     }
 
