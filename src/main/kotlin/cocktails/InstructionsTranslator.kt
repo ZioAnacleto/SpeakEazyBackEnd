@@ -17,7 +17,7 @@ class InstructionsTranslator {
     suspend fun translate(
         text: String,
         isFromEnglish: Boolean = true
-    ): HuggingFaceTranslationResponse {
+    ): String {
         val client = HttpClient(CIO) {
             install(ContentNegotiation) {
                 json()
@@ -54,7 +54,8 @@ class InstructionsTranslator {
                 println("Raw AI response: $rawResponse")
                 client.close()
 
-                Json.decodeFromString<HuggingFaceTranslationResponse>(rawResponse)
+                val regex = """"translation_text"\s*:\s*"([^"]+)"""".toRegex()
+                regex.find(rawResponse)?.groupValues?.get(1) ?: text
             }
         }.await()
     }

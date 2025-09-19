@@ -63,8 +63,3 @@ data class ExposedCocktail(
 data class HuggingFaceTranslationRequest(
     val inputs: String
 )
-
-@Serializable
-data class HuggingFaceTranslationResponse(
-    val translation_text: String
-)

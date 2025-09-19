@@ -43,7 +43,7 @@ class CocktailService(database: Database) {
                     .translate(
                         text = cocktail.instructionsIt,
                         isFromEnglish = false
-                    ).translation_text
+                    )
             }
         println("Create function, english instructions: $cocktailInstructions")
 
@@ -52,7 +52,7 @@ class CocktailService(database: Database) {
                 InstructionsTranslator()
                     .translate(
                         text = cocktail.instructions
-                    ).translation_text
+                    )
             }
         println("Create function, italian instructions: $cocktailInstructionsIt")
 
