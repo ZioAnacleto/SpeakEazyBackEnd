@@ -37,11 +37,30 @@ class CocktailService(database: Database) {
      *  Suspend function that inserts new row on Cocktail DB, returning the newly inserted row's id
      */
     suspend fun create(cocktail: ExposedCocktail): Int = dbQuery {
+        val cocktailInstructions =
+            cocktail.instructions.ifEmpty {
+                InstructionsTranslator()
+                    .translate(
+                        text = cocktail.instructionsIt,
+                        isFromEnglish = false
+                    ).translation_text
+            }
+        println("Create function, english instructions: $cocktailInstructions")
+
+        val cocktailInstructionsIt =
+            cocktail.instructionsIt.ifEmpty {
+                InstructionsTranslator()
+                    .translate(
+                        text = cocktail.instructions
+                    ).translation_text
+            }
+        println("Create function, italian instructions: $cocktailInstructionsIt")
+
         Cocktails.insert {
             it[name] = cocktail.name
             it[category] = cocktail.category
-            it[instructions] = cocktail.instructions
-            it[instructionsIt] = cocktail.instructionsIt
+            it[instructions] = cocktailInstructions
+            it[instructionsIt] = cocktailInstructionsIt
             it[glass] = cocktail.glass
             it[isAlcoholic] = cocktail.isAlcoholic
             it[imageLink] = cocktail.imageLink

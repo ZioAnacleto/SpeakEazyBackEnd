@@ -1,5 +1,6 @@
 package com.zioanacleto.cocktails
 
+import com.zioanacleto.search.Parameters
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -57,3 +58,13 @@ data class ExposedCocktail(
                 "tags: $tags\nuserId: $userId\nusername: $username"
     }
 }
+
+@Serializable
+data class HuggingFaceTranslationRequest(
+    val inputs: String
+)
+
+@Serializable
+data class HuggingFaceTranslationResponse(
+    val translation_text: String
+)
