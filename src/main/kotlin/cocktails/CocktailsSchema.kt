@@ -10,7 +10,13 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class CocktailService(database: Database) {
     object Cocktails : Table() {
-        val id = integer(DB_KEY_ID).autoIncrement()
+        val id = integer(DB_KEY_ID).autoIncrement(
+            sequence = Sequence(
+                "idSequence",
+                startWith = 101,
+                incrementBy = 1
+            )
+        )
         val name = varchar(DB_KEY_NAME, length = 500)
         val category = varchar(DB_KEY_CATEGORY, length = 500)
         val instructions = varchar(DB_KEY_INSTRUCTIONS, length = 500)
