@@ -15,7 +15,7 @@ object HomeConfigManager {
     private var lastModified: Long = 0L
     private var watchJob: Job? = null
 
-    private val file by lazy { File("resources/config/home_sections.json") }
+    private val file = File("resources/home_sections.json")
 
     fun startAutoReload(scope: CoroutineScope, intervalMs: Long = INTERVAL) {
         loadConfig()
