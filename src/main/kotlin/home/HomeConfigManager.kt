@@ -15,12 +15,10 @@ object HomeConfigManager {
     private var lastModified: Long = 0L
     private var watchJob: Job? = null
 
-    private val file = File("resources/home_sections.json")
-
     fun startAutoReload(scope: CoroutineScope, intervalMs: Long = INTERVAL) {
         println("startAutoReload called, loading file...")
         loadConfig()
-        watchJob = scope.launch {
+        /*watchJob = scope.launch {
             while (isActive) {
                 delay(intervalMs)
                 val modified = file.lastModified()
@@ -29,7 +27,7 @@ object HomeConfigManager {
                     loadConfig()
                 }
             }
-        }
+        }*/
     }
 
     fun getConfig(): HomeSectionsConfig =
@@ -40,18 +38,17 @@ object HomeConfigManager {
     }
 
     private fun loadConfig() {
-        if (!file.exists()) {
+        val resource = this::class.java.classLoader.getResourceAsStream("home_sections.json")
+        if (resource == null) {
             println("[HomeConfigManager] WARNING: configuration file not found, closing.")
             return
         }
         println("File exists, reading it...")
-        val text = file.readText()
+        val text = resource.bufferedReader().use { it.readText() }
         val newConfig = json.decodeFromString(HomeSectionsConfig.serializer(), text)
         println("File read, newConfig: $newConfig")
         configCache.set(newConfig)
-        println("Config cache is now populated: ${configCache.get()}")
 
-        lastModified = file.lastModified()
         println("[HomeConfigManager] Configuration loaded with ${newConfig.sections.size} sections.")
     }
 
