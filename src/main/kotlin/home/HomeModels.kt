@@ -23,3 +23,17 @@ data class ExposedBanner(
     val cocktailInfo: ExposedCocktail,
     val cta: String? = null
 )
+
+@Serializable
+data class HomeSectionsConfig(
+    val sections: List<SectionConfig>,
+    val numberOfSections: Int
+)
+
+@Serializable
+data class SectionConfig(
+    val type: String,
+    val query: String? = null,
+    val limit: Int? = null,
+    val title: String
+)

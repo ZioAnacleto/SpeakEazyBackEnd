@@ -1,0 +1,13 @@
+{
+  "sections": [
+    { "type": "category", "query": "The Unforgettables", "title": "IBA: The Unforgettables" },
+    { "type": "category", "query": "Contemporary Classics", "title": "IBA: Contemporary Classics" },
+    { "type": "category", "query": "SpeakEazy Original", "title": "SpeakEazy Originals: creati da voi" },
+    { "type": "type", "query": "Before Dinner", "title": "Before Dinner Cocktails" },
+    { "type": "type", "query": "After Dinner", "title": "After Dinner Cocktails" },
+    { "type": "type", "query": "Long Drink", "title": "Long drinks" },
+    { "type": "popular", "limit": 10, "title": "I più popolari" },
+    { "type": "ingredient", "query": "Rum", "title": "A base di Rum" }
+  ],
+  "numberOfSections": 4
+}

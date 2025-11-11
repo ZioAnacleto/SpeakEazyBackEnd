@@ -136,6 +136,13 @@ class CocktailService(database: Database) {
     suspend fun readAllWithType(type: String): ExposedCocktailList =
         queryCocktailsWithWhereCondition { Cocktails.type eq type }
 
+    suspend fun readAllWithIngredient(ingredientName: String): ExposedCocktailList =
+        readAll().apply {
+            cocktails.filter { cocktail ->
+                cocktail.ingredients.ingredients.any { ing -> ing.name.equals(ingredientName, ignoreCase = true) }
+            }
+        }
+
     // todo: pagination?
     suspend fun readAll(): ExposedCocktailList =
         dbQuery {

@@ -7,35 +7,26 @@ import org.jetbrains.exposed.sql.Database
 class HomeService(private val database: Database) {
 
     suspend fun homeSections(): ExposedHomeSectionsList = dbQuery {
+        val config = HomeConfigManager.getConfig()
+        val allSections = config.sections.shuffled().take(config.numberOfSections)
+        val cocktailService = CocktailService(database)
+
         var id = 0
-        val unforgettables = CocktailService(database).readAllWithCategory(QUERY_COCKTAIL_CATEGORY).cocktails
-        val beforeDinners = CocktailService(database).readAllWithType(QUERY_COCKTAIL_TYPE).cocktails
-        val mostPopular = CocktailService(database).readMostPopular(QUERY_COCKTAIL_POPULAR_SIZE).cocktails
-
-        ExposedHomeSectionsList(
-            listOf(
-                ExposedHomeSection(
-                    id = (++id).toString(),
-                    name = "IBA: The Unforgettables",
-                    cocktails = unforgettables
-                ),
-                ExposedHomeSection(
-                    id = (++id).toString(),
-                    name = "Before Dinner Cocktails",
-                    cocktails = beforeDinners
-                ),
-                ExposedHomeSection(
-                    id = (++id).toString(),
-                    name = "I più popolari",
-                    cocktails = mostPopular
-                )
+        val exposedSections = allSections.map { section ->
+            val cocktails = when(section.type) {
+                "category" -> cocktailService.readAllWithCategory(section.query!!).cocktails
+                "type" -> cocktailService.readAllWithType(section.query!!).cocktails
+                "popular" -> cocktailService.readMostPopular(section.limit!!).cocktails
+                "ingredient" -> cocktailService.readAllWithIngredient(section.query!!).cocktails
+                else -> emptyList()
+            }
+            ExposedHomeSection(
+                id = (++id).toString(),
+                name = section.title,
+                cocktails = cocktails
             )
-        )
-    }
+        }
 
-    companion object {
-        private const val QUERY_COCKTAIL_CATEGORY = "The Unforgettables"
-        private const val QUERY_COCKTAIL_TYPE = "Before Dinner"
-        private const val QUERY_COCKTAIL_POPULAR_SIZE = 10
+        ExposedHomeSectionsList(exposedSections)
     }
 }
