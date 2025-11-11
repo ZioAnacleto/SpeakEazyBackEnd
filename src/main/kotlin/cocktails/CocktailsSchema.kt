@@ -227,7 +227,6 @@ class CocktailService(database: Database) {
             ""
         }
 
-        println("Username: $username")
         return ExposedCocktail(
             id = this[Cocktails.id].toString(),
             name = this[Cocktails.name],

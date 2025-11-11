@@ -1,11 +1,14 @@
 package com.zioanacleto.home
 
 import io.ktor.server.application.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
-import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
+// todo: storing file outside and refresh using the watchJob
 object HomeConfigManager {
     private val json = Json {
         ignoreUnknownKeys = true
@@ -39,7 +42,7 @@ object HomeConfigManager {
 
     private fun loadConfig() {
         val resource = this::class.java.classLoader.getResourceAsStream("home_sections.json")
-        if (resource == null) {
+        checkNotNull(resource) {
             println("[HomeConfigManager] WARNING: configuration file not found, closing.")
             return
         }
