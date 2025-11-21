@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class CocktailService(database: Database) {
     object Cocktails : Table() {
-        val id = integer(DB_KEY_ID).autoIncrement()
+        val id = integer(DB_KEY_ID).autoIncrement().uniqueIndex()
         val name = varchar(DB_KEY_NAME, length = 500)
         val category = varchar(DB_KEY_CATEGORY, length = 500)
         val instructions = varchar(DB_KEY_INSTRUCTIONS, length = 500)
@@ -33,8 +33,13 @@ class CocktailService(database: Database) {
         transaction(database) {
             SchemaUtils.create(Cocktails)
 
-            // Not sure about cocktails_id_seq name
-            exec("ALTER SEQUENCE cocktails_id_seq RESTART WITH 1000")
+            exec(
+                """ 
+                SELECT setval( 
+                    'cocktails_id_seq', 
+                    (SELECT COALESCE(MAX(id), 0) FROM cocktails) + 1 
+                ) """.trimIndent()
+            )
         }
     }
 
