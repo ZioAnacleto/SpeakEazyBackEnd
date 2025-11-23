@@ -35,5 +35,7 @@ data class SectionConfig(
     val type: String,
     val query: String? = null,
     val limit: Int? = null,
-    val title: String
+    val title: String,
+    val cta: String? = null,
+    val position: String? = null
 )

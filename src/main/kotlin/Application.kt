@@ -1,6 +1,5 @@
 package com.zioanacleto
 
-import com.zioanacleto.home.configureHomeConfigManager
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
@@ -23,6 +22,5 @@ fun Application.module() {
 
     configureTokenValidation()
     configureSerialization()
-    configureHomeConfigManager()
     configureRouting(configureDatabase())
 }

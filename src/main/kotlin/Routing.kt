@@ -1,5 +1,6 @@
 package com.zioanacleto
 
+import com.zioanacleto.admin.setupAdminRouting
 import com.zioanacleto.cocktails.setupCocktailsRouting
 import com.zioanacleto.home.setupHomeRouting
 import com.zioanacleto.ingredients.setupIngredientsRouting
@@ -21,5 +22,6 @@ fun Application.configureRouting(database: Database) {
         setupHomeRouting(database)
         setupSearchRouting(database)
         setupTagsRouting(database)
+        setupAdminRouting()
     }
 }

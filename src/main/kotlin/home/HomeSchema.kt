@@ -7,8 +7,9 @@ import org.jetbrains.exposed.sql.Database
 class HomeService(private val database: Database) {
 
     suspend fun homeSections(): ExposedHomeSectionsList = dbQuery {
-        val config = HomeConfigManager.getConfig()
+        val config = HomeConfigManager.loadConfig()
         val allSections = config.sections.shuffled().take(config.numberOfSections)
+        val bannerSection = config.sections.firstOrNull { it.type == "banner" }
         val cocktailService = CocktailService(database)
 
         var id = 0
@@ -26,7 +27,16 @@ class HomeService(private val database: Database) {
                 cocktails = cocktails
             )
         }
+        val banner = bannerSection?.let { section ->
+            val cocktail = cocktailService.readSingleWithName(section.query!!)
+            ExposedBanner(
+                position = section.position!!,
+                name = section.title,
+                cocktailInfo = cocktail!!,
+                cta = section.cta
+            )
+        }
 
-        ExposedHomeSectionsList(exposedSections)
+        ExposedHomeSectionsList(exposedSections, banner)
     }
 }

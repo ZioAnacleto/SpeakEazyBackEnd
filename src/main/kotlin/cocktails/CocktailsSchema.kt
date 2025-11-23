@@ -94,6 +94,9 @@ class CocktailService(database: Database) {
             }
         }
 
+    /**
+     *  Suspend function that returns a single cocktail with given id, with ingredients section enriched
+     */
     suspend fun readSingle(id: Int): ExposedCocktail? =
         dbQuery {
             // Find correct cocktail with given id
@@ -135,17 +138,60 @@ class CocktailService(database: Database) {
             cocktail
         }
 
+    /**
+     *  Suspend function that returns just a single cocktail with given name
+     */
+    suspend fun readSingleWithName(name: String): ExposedCocktail? =
+        dbQuery {
+            // Find correct cocktail with given name
+            Cocktails.selectAll()
+                .where { Cocktails.name eq name }
+                .map {
+                    it.createCocktail()
+                }
+                .singleOrNull()
+        }
+
+    /**
+     *  Suspend function that returns all cocktails with given category
+     */
     suspend fun readAllWithCategory(category: String): ExposedCocktailList =
         queryCocktailsWithWhereCondition { Cocktails.category eq category }
 
+    /**
+     *  Suspend function that returns all cocktails with given type
+     */
     suspend fun readAllWithType(type: String): ExposedCocktailList =
         queryCocktailsWithWhereCondition { Cocktails.type eq type }
 
+    /**
+     *  Suspend function that returns all cocktails that has ingredient with given name among all
+     */
     suspend fun readAllWithIngredient(ingredientName: String): ExposedCocktailList =
-        readAll().apply {
-            cocktails.filter { cocktail ->
-                cocktail.ingredients.ingredients.any { ing -> ing.name.equals(ingredientName, ignoreCase = true) }
-            }
+        dbQuery {
+            ExposedCocktailList(
+                // Retrieve all cocktails
+                Cocktails.selectAll()
+                    .mapNotNull {
+                        it.createCocktail()
+                    }
+                    // filter out the ones without given ingredient
+                    .filter { cocktail ->
+                        val ingredientsIds =
+                            cocktail.ingredients.ingredients.map { ingredient ->
+                                ingredient.id.toInt()
+                            }
+
+                        val ingredients = IngredientsService.Ingredients.selectAll()
+                            .where {
+                                IngredientsService.Ingredients.id inList ingredientsIds
+                            }
+                            .where { IngredientsService.Ingredients.name eq ingredientName }
+                            .map { it[IngredientsService.Ingredients.id].toString() }
+
+                        ingredients.isNotEmpty()
+                    }
+            )
         }
 
     // todo: pagination?
@@ -190,6 +236,10 @@ class CocktailService(database: Database) {
             )
         }
 
+    /**
+     *  Suspend function that returns a list [size] sized sorted by visualizations number
+     *  in reverse order
+     */
     suspend fun readMostPopular(size: Int): ExposedCocktailList =
         dbQuery {
             ExposedCocktailList(
