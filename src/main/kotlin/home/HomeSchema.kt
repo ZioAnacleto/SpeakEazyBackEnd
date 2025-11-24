@@ -14,7 +14,7 @@ class HomeService(private val database: Database) {
 
         var id = 0
         val exposedSections = allSections.map { section ->
-            val cocktails = when(section.type) {
+            val cocktails = when (section.type) {
                 "category" -> cocktailService.readAllWithCategory(section.query!!).cocktails
                 "type" -> cocktailService.readAllWithType(section.query!!).cocktails
                 "popular" -> cocktailService.readMostPopular(section.limit!!).cocktails
@@ -29,12 +29,14 @@ class HomeService(private val database: Database) {
         }
         val banner = bannerSection?.let { section ->
             val cocktail = cocktailService.readSingleWithName(section.query!!)
-            ExposedBanner(
-                position = section.position!!,
-                name = section.title,
-                cocktailInfo = cocktail!!,
-                cta = section.cta
-            )
+            cocktail?.let { foundCocktail ->
+                ExposedBanner(
+                    position = section.position!!,
+                    name = section.title,
+                    cocktailInfo = foundCocktail,
+                    cta = section.cta
+                )
+            }
         }
 
         ExposedHomeSectionsList(exposedSections, banner)
