@@ -40,7 +40,7 @@ data class SectionConfig(
     val position: String? = null
 )
 
-enum class SectionType(name: String) {
+enum class SectionType(val typeName: String) {
     CATEGORY("category"),
     TYPE("type"),
     POPULAR("popular"),
@@ -48,6 +48,6 @@ enum class SectionType(name: String) {
     BANNER("banner")
 }
 
-fun String.toType() = SectionType.entries.firstOrNull { it.name == this }
+fun String.toType() = SectionType.entries.firstOrNull { it.typeName == this }
 fun List<SectionConfig>.findBanner() = this.firstOrNull { it.type.toType() == SectionType.BANNER }
 fun List<SectionConfig>.filterOutBanner() = this.filter { it.type.toType() != SectionType.BANNER }
