@@ -8,13 +8,15 @@ class HomeService(private val database: Database) {
 
     suspend fun homeSections(): ExposedHomeSectionsList = dbQuery {
         val config = HomeConfigManager.loadConfig()
-        val allSections =
-            config.sections.filterOutBanner().shuffled().take(config.numberOfSections)
-        val bannerSection = config.sections.findBanner()
+        // take [numberOfSections] sections shuffled (including banners)
+        val allSections = config.sections.shuffled().take(config.numberOfSections)
+        // take only one banner (if any) from allSections
+        val bannerSection = allSections.findBanner()
         val cocktailService = CocktailService(database)
 
         var id = 0
-        val exposedSections = allSections.map { section ->
+        // mapping all sections but banner
+        val exposedSections = allSections.filterOutBanner().map { section ->
             val cocktails = when (section.type.toType()) {
                 SectionType.CATEGORY -> cocktailService.readAllWithCategory(section.query!!).cocktails
                 SectionType.TYPE -> cocktailService.readAllWithType(section.query!!).cocktails
@@ -28,6 +30,7 @@ class HomeService(private val database: Database) {
                 cocktails = cocktails
             )
         }
+        // mapping banner if available
         val banner = bannerSection?.let { section ->
             val cocktail = cocktailService.readSingleWithName(section.query!!)
             cocktail?.let { foundCocktail ->
