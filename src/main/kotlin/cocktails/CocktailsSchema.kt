@@ -184,9 +184,9 @@ class CocktailService(database: Database) {
 
                         val ingredients = IngredientsService.Ingredients.selectAll()
                             .where {
-                                IngredientsService.Ingredients.id inList ingredientsIds
+                                IngredientsService.Ingredients.id inList ingredientsIds and
+                                        (IngredientsService.Ingredients.name eq ingredientName)
                             }
-                            .where { IngredientsService.Ingredients.name eq ingredientName }
                             .map { it[IngredientsService.Ingredients.id].toString() }
 
                         ingredients.isNotEmpty()
