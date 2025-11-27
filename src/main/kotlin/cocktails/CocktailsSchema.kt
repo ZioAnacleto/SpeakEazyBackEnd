@@ -37,7 +37,7 @@ class CocktailService(database: Database) {
                 """ 
                 SELECT setval( 
                     'cocktails_id_seq', 
-                    (SELECT COALESCE(MAX(id), 0) FROM cocktails) + 1 
+                    (SELECT COALESCE(MAX(id), 0) FROM cocktails)
                 ) """.trimIndent()
             )
         }
