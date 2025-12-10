@@ -6,6 +6,7 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
 
 fun Routing.setupIngredientsRouting(database: Database) {
@@ -14,6 +15,9 @@ fun Routing.setupIngredientsRouting(database: Database) {
     // Add new ingredient
     post("ingredients/add") {
         val ingredient = call.receive<ExposedIngredient>()
+        val jsonIngredient = Json.encodeToString(ingredient)
+        println("Adding ingredient: $jsonIngredient")
+
         basePostApi(ingredient) {
             val id = ingredientsService.create(ingredient)
             call.respond(HttpStatusCode.Created, id)

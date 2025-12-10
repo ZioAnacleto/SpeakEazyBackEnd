@@ -1,6 +1,5 @@
 package com.zioanacleto.cocktails
 
-import com.zioanacleto.search.Parameters
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -38,8 +37,8 @@ data class ExposedCocktail(
     val id: String,
     val name: String,
     val category: String,
-    val instructions: String,
-    val instructionsIt: String,
+    val instructions: List<String>,
+    val instructionsIt: List<String>,
     val glass: String,
     val isAlcoholic: Boolean,
     val imageLink: String,

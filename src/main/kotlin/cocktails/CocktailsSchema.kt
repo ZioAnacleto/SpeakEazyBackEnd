@@ -13,8 +13,8 @@ class CocktailService(database: Database) {
         val id = integer(DB_KEY_ID).autoIncrement().uniqueIndex()
         val name = varchar(DB_KEY_NAME, length = 500)
         val category = varchar(DB_KEY_CATEGORY, length = 500)
-        val instructions = varchar(DB_KEY_INSTRUCTIONS, length = 500)
-        val instructionsIt = varchar(DB_KEY_INSTRUCTIONS_IT, length = 500)
+        val instructions = jsonb(DB_KEY_INSTRUCTIONS)
+        val instructionsIt = jsonb(DB_KEY_INSTRUCTIONS_IT)
         val glass = varchar(DB_KEY_GLASS, length = 500)
         val isAlcoholic = bool(DB_KEY_IS_ALCOHOLIC)
         val imageLink = varchar(DB_KEY_IMAGE_LINK, length = 1000)
@@ -48,20 +48,20 @@ class CocktailService(database: Database) {
      */
     suspend fun create(cocktail: ExposedCocktail): Int = dbQuery {
         val cocktailInstructions =
-            cocktail.instructions.ifEmpty {
+            cocktail.instructions.joinToString(" "){ it }.ifEmpty {
                 InstructionsTranslator()
                     .translate(
-                        text = cocktail.instructionsIt,
+                        text = cocktail.instructionsIt.joinToString(" ") { it },
                         isFromEnglish = false
                     )
             }
         println("Create function, english instructions: $cocktailInstructions")
 
         val cocktailInstructionsIt =
-            cocktail.instructionsIt.ifEmpty {
+            cocktail.instructionsIt.joinToString(" "){ it }.ifEmpty {
                 InstructionsTranslator()
                     .translate(
-                        text = cocktail.instructions
+                        text = cocktail.instructions.joinToString(" ") { it },
                     )
             }
         println("Create function, italian instructions: $cocktailInstructionsIt")
@@ -69,8 +69,8 @@ class CocktailService(database: Database) {
         Cocktails.insert {
             it[name] = cocktail.name
             it[category] = cocktail.category
-            it[instructions] = cocktailInstructions
-            it[instructionsIt] = cocktailInstructionsIt
+            it[instructions] = Json.encodeToString(cocktailInstructions.trim().split(". "))
+            it[instructionsIt] = Json.encodeToString(cocktailInstructionsIt.trim().split(". "))
             it[glass] = cocktail.glass
             it[isAlcoholic] = cocktail.isAlcoholic
             it[imageLink] = cocktail.imageLink
@@ -286,8 +286,8 @@ class CocktailService(database: Database) {
             id = this[Cocktails.id].toString(),
             name = this[Cocktails.name],
             category = this[Cocktails.category],
-            instructions = this[Cocktails.instructions],
-            instructionsIt = this[Cocktails.instructionsIt],
+            instructions = Json.decodeFromString(this[Cocktails.instructions]),
+            instructionsIt = Json.decodeFromString(this[Cocktails.instructionsIt]),
             glass = this[Cocktails.glass],
             isAlcoholic = this[Cocktails.isAlcoholic],
             imageLink = this[Cocktails.imageLink],

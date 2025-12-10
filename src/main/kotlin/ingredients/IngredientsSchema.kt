@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class IngredientsService(database: Database) {
     object Ingredients : Table() {
-        val id = integer(DB_KEY_ID).autoIncrement()
+        val id = integer(DB_KEY_ID).autoIncrement().uniqueIndex()
         val name = varchar(DB_KEY_NAME, 500)
         val image = varchar(DB_KEY_IMAGE, 2000)
     }
