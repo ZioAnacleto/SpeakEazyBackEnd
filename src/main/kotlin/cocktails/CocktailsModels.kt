@@ -33,12 +33,18 @@ data class ExposedCocktailTag(
 )
 
 @Serializable
+data class ExposedCocktailInstruction(
+    val type: String,
+    val instruction: String
+)
+
+@Serializable
 data class ExposedCocktail(
     val id: String,
     val name: String,
     val category: String,
-    val instructions: List<String>,
-    val instructionsIt: List<String>,
+    val instructions: List<ExposedCocktailInstruction>,
+    val instructionsIt: List<ExposedCocktailInstruction>,
     val glass: String,
     val isAlcoholic: Boolean,
     val imageLink: String,

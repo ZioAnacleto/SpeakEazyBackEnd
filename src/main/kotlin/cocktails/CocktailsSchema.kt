@@ -48,20 +48,20 @@ class CocktailService(database: Database) {
      */
     suspend fun create(cocktail: ExposedCocktail): Int = dbQuery {
         val cocktailInstructions =
-            cocktail.instructions.joinToString(" "){ it }.ifEmpty {
+            cocktail.instructions.joinToString(" "){ it.instruction }.ifEmpty {
                 InstructionsTranslator()
                     .translate(
-                        text = cocktail.instructionsIt.joinToString(" ") { it },
+                        text = cocktail.instructionsIt.joinToString(" ") { it.instruction },
                         isFromEnglish = false
                     )
             }
         println("Create function, english instructions: $cocktailInstructions")
 
         val cocktailInstructionsIt =
-            cocktail.instructionsIt.joinToString(" "){ it }.ifEmpty {
+            cocktail.instructionsIt.joinToString(" "){ it.instruction }.ifEmpty {
                 InstructionsTranslator()
                     .translate(
-                        text = cocktail.instructions.joinToString(" ") { it },
+                        text = cocktail.instructions.joinToString(" ") { it.instruction },
                     )
             }
         println("Create function, italian instructions: $cocktailInstructionsIt")
@@ -69,8 +69,12 @@ class CocktailService(database: Database) {
         Cocktails.insert {
             it[name] = cocktail.name
             it[category] = cocktail.category
-            it[instructions] = Json.encodeToString(cocktailInstructions.trim().split(". "))
-            it[instructionsIt] = Json.encodeToString(cocktailInstructionsIt.trim().split(". "))
+            it[instructions] = Json.encodeToString(
+                cocktailInstructions.trim().split(". ").mapToInstruction()
+            )
+            it[instructionsIt] = Json.encodeToString(
+                cocktailInstructionsIt.trim().split(". ").mapToInstruction()
+            )
             it[glass] = cocktail.glass
             it[isAlcoholic] = cocktail.isAlcoholic
             it[imageLink] = cocktail.imageLink
@@ -301,6 +305,13 @@ class CocktailService(database: Database) {
         )
     }
 
+    private fun List<String>.mapToInstruction() = this.map {
+        ExposedCocktailInstruction(
+            type = DEFAULT_INSTRUCTION_TYPE,
+            instruction = it
+        )
+    }
+
     companion object {
         private const val DB_KEY_ID = "id"
         private const val DB_KEY_NAME = "name"
@@ -317,5 +328,6 @@ class CocktailService(database: Database) {
         private const val DB_KEY_TAGS = "tags"
         private const val DB_KEY_USER_ID = "userid"
         private const val DB_KEY_USERNAME = "username"
+        private const val DEFAULT_INSTRUCTION_TYPE = "instruction"
     }
 }
