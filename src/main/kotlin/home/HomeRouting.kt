@@ -1,6 +1,7 @@
 package com.zioanacleto.home
 
 import com.zioanacleto.baseGetApi
+import com.zioanacleto.setCacheControl
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -12,7 +13,7 @@ fun Routing.setupHomeRouting(database: Database) {
     // Get home sections containing cocktails
     get("/home") {
         baseGetApi {
-            call.response.cacheControl(CacheControl.MaxAge(3600))
+            call.setCacheControl()
             val sections = homeService.homeSections()
             call.respond(
                 HttpStatusCode.OK,

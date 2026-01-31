@@ -1,9 +1,6 @@
 package com.zioanacleto.cocktails
 
-import com.zioanacleto.baseDeleteApi
-import com.zioanacleto.baseGetApi
-import com.zioanacleto.basePostApi
-import com.zioanacleto.basePutApi
+import com.zioanacleto.*
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -42,6 +39,7 @@ fun Routing.setupCocktailsRouting(database: Database) {
     // Get single cocktail by id
     get("/cocktails/{id}") {
         baseGetApi {
+            call.setCacheControl(CACHE_CONTROL_ONE_MINUTE)
             val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
             val cocktail = cocktailService.readSingle(id)
 
