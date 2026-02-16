@@ -18,6 +18,7 @@ class CocktailService(database: Database) {
         val glass = varchar(DB_KEY_GLASS, length = 500)
         val isAlcoholic = bool(DB_KEY_IS_ALCOHOLIC)
         val imageLink = varchar(DB_KEY_IMAGE_LINK, length = 1000)
+        val videoLink = varchar(DB_KEY_VIDEO_LINK, length = 1000)
         val type = varchar(DB_KEY_TYPE, length = 500)
         val method = varchar(DB_KEY_METHOD, length = 500)
         val ingredients = jsonb(DB_KEY_INGREDIENTS)
@@ -78,6 +79,7 @@ class CocktailService(database: Database) {
             it[glass] = cocktail.glass
             it[isAlcoholic] = cocktail.isAlcoholic
             it[imageLink] = cocktail.imageLink
+            it[videoLink] = cocktail.videoLink
             it[type] = cocktail.type
             it[method] = cocktail.method
             it[tags] = Json.encodeToString(cocktail.tags)
@@ -256,16 +258,6 @@ class CocktailService(database: Database) {
             )
         }
 
-    fun deleteColumn(columnName: String): String =
-        transaction {
-            val column = Column(Cocktails, columnName, IntegerColumnType())
-
-            column.dropStatement().forEach {
-                exec(it)
-            }
-            column.name
-        }
-
     private suspend fun queryCocktailsWithWhereCondition(
         whereCondition: SqlExpressionBuilder.() -> Op<Boolean>
     ) = dbQuery {
@@ -295,6 +287,7 @@ class CocktailService(database: Database) {
             glass = this[Cocktails.glass],
             isAlcoholic = this[Cocktails.isAlcoholic],
             imageLink = this[Cocktails.imageLink],
+            videoLink = this[Cocktails.videoLink],
             type = this[Cocktails.type],
             method = this[Cocktails.method],
             ingredients = Json.decodeFromString(this[Cocktails.ingredients]),
@@ -321,6 +314,7 @@ class CocktailService(database: Database) {
         private const val DB_KEY_GLASS = "glass"
         private const val DB_KEY_IS_ALCOHOLIC = "isalcoholic"
         private const val DB_KEY_IMAGE_LINK = "imagelink"
+        private const val DB_KEY_VIDEO_LINK = "videolink"
         private const val DB_KEY_TYPE = "type"
         private const val DB_KEY_METHOD = "method"
         private const val DB_KEY_INGREDIENTS = "ingredients"

@@ -53,17 +53,6 @@ fun Routing.setupCocktailsRouting(database: Database) {
         }
     }
 
-    // Alter table deleting a column
-    delete("/cocktails/dropColumn/{columnName}") {
-        val columnName = call.parameters["columnName"] ?: throw IllegalArgumentException("Invalid column name")
-        baseDeleteApi(columnName) {
-            val deletedColumnName = cocktailService.deleteColumn(columnName)
-            call.respond(HttpStatusCode.Accepted, deletedColumnName)
-
-            deletedColumnName
-        }
-    }
-
     // Updates single cocktail with new data, updating visualizations number
     put("/cocktails/{id}") {
         basePutApi {

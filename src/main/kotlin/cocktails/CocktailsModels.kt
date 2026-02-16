@@ -48,6 +48,7 @@ data class ExposedCocktail(
     val glass: String,
     val isAlcoholic: Boolean,
     val imageLink: String,
+    val videoLink: String,
     val type: String,
     val method: String,
     var ingredients: ExposedCocktailIngredients,
@@ -59,7 +60,7 @@ data class ExposedCocktail(
     override fun toString(): String {
         return "\nCocktail id: $id\nname: $name\ncategory: $category\nglass: $glass\ninstructions: $instructions\n" +
                 "instructionsIT: $instructionsIt\nisAlcoholic: $isAlcoholic\nimageLink: $imageLink\n" +
-                "type: $type\nmethod: $method\ningredients: $ingredients\nvisualizations: $visualizations\n" +
+                "videLink: $videoLink\ntype: $type\nmethod: $method\ningredients: $ingredients\nvisualizations: $visualizations\n" +
                 "tags: $tags\nuserId: $userId\nusername: $username"
     }
 }
