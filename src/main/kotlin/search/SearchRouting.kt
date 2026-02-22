@@ -1,11 +1,7 @@
 package com.zioanacleto.search
 
-import com.zioanacleto.asyncCall
 import com.zioanacleto.baseGetApi
 import com.zioanacleto.basePostApi
-import com.zioanacleto.cocktails.CocktailService
-import com.zioanacleto.cocktails.ExposedCocktailList
-import com.zioanacleto.tags.TagsService
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -15,13 +11,27 @@ import org.jetbrains.exposed.sql.Database
 fun Routing.setupSearchRouting(database: Database) {
     val searchService = SearchService(database)
 
+    // for HuggingFace LLM query
     post("/search") {
         val request = call.receive<SearchRequest>()
         basePostApi(request) {
-            val cocktails = searchService.searchForCocktails(request)
+            val cocktails = searchService.searchForCocktailsUsingHuggingFace(request)
             call.respond(HttpStatusCode.OK, cocktails)
 
             cocktails
+        }
+    }
+
+    get("/search") {
+        baseGetApi {
+            val query = call.request.queryParameters["query"]
+
+            println("nameQuery: $query")
+
+            val response = searchService.searchForCocktails(query ?: "")
+            call.respond(HttpStatusCode.OK, response)
+
+            response
         }
     }
 
@@ -35,27 +45,10 @@ fun Routing.setupSearchRouting(database: Database) {
             println("ingredientQuery: $ingredientQuery")
             println("tagQuery: $tagQuery")
 
-            // reading from DB
-            val allCocktails = asyncCall { CocktailService(database).readAll() }
-            val allTags = asyncCall { TagsService(database).readAll() }
+            val response = searchService.filterCocktails(nameQuery, ingredientQuery, tagQuery)
+            call.respond(HttpStatusCode.OK, response)
 
-            val filtered = allCocktails.cocktails.filter { cocktail ->
-                val matchName = nameQuery?.let { cocktail.name.contains(it, ignoreCase = true) } ?: true
-                val matchIngredient = ingredientQuery.isEmpty() || ingredientQuery.any { query ->
-                    cocktail.ingredients.ingredients.any { ing -> ing.name.equals(query, ignoreCase = true) }
-                }
-                val matchTag = tagQuery.isEmpty() || tagQuery.any {
-                    cocktail.tags.tags.any { tagId ->
-                        allTags.tags.any { it.id == tagId.id }
-                    }
-                }
-
-                matchName && matchIngredient && matchTag
-            }
-
-            call.respond(HttpStatusCode.OK, ExposedCocktailList(filtered))
-
-            ExposedCocktailList(filtered)
+            response
         }
     }
 }

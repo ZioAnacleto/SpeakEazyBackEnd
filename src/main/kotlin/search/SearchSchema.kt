@@ -13,15 +13,40 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
 
 class SearchService(private val database: Database) {
 
-    suspend fun searchForCocktails(prompt: SearchRequest): ExposedCocktailList {
+    suspend fun searchForCocktails(query: String): ExposedCocktailList {
+        return try {
+            val cocktailsService = CocktailService(database)
+
+            // retrieve data from DB (cocktails, ingredients, tags)
+            val cocktails = asyncCall { cocktailsService.readAll() }
+
+            println("Search service, request: $query")
+
+            val matchingCocktails = cocktails.cocktails.filter { cocktail ->
+                val matchName = cocktail.name.contains(query, ignoreCase = true)
+                val matchIngredient =
+                    cocktail.ingredients.ingredients.any { ing ->
+                        ing.name.contains(query, ignoreCase = true)
+                    }
+
+                matchName || matchIngredient
+            }
+
+            ExposedCocktailList(matchingCocktails)
+        } catch (exception: Exception) {
+            println("Error while calling search API: ${exception.message}")
+            exception.printStackTrace()
+
+            throw exception
+        }
+    }
+
+    suspend fun searchForCocktailsUsingHuggingFace(prompt: SearchRequest): ExposedCocktailList {
         return try {
             val cocktailsService = CocktailService(database)
             val ingredientsService = IngredientsService(database)
@@ -35,18 +60,20 @@ class SearchService(private val database: Database) {
             println("Search service, request: $prompt")
 
             // perform two different api calls in parallel
-            val tagsResponse = performHuggingFaceApiCall(
-                prompt.query,
-                tags.tags.map { it.name }
-            )
+            val tagsResponse = asyncCall {
+                performHuggingFaceApiCall(
+                    prompt.query,
+                    tags.tags.map { it.name }
+                )
+            }
+            val ingredientsResponse = asyncCall {
+                performHuggingFaceApiCall(
+                    prompt.query,
+                    ingredients.ingredients.map { it.name }
+                )
+            }
 
             println("Search api called, tagsResponse: $tagsResponse")
-
-            val ingredientsResponse = performHuggingFaceApiCall(
-                prompt.query,
-                ingredients.ingredients.map { it.name }
-            )
-
             println("Search api called, ingredientsResponse: $ingredientsResponse")
 
             // select tags and ingredients over threshold, that match the prompt the most
@@ -81,6 +108,33 @@ class SearchService(private val database: Database) {
         }
     }
 
+    // To be updated to a more scalable version
+    suspend fun filterCocktails(
+        nameQuery: String?,
+        ingredientsQuery: List<String> = emptyList(),
+        tagsQuery: List<String> = emptyList()
+    ): ExposedCocktailList {
+        // reading from DB
+        val allCocktails = asyncCall { CocktailService(database).readAll() }
+        val allTags = asyncCall { TagsService(database).readAll() }
+
+        val filtered = allCocktails.cocktails.filter { cocktail ->
+            val matchName = nameQuery?.let { cocktail.name.contains(it, ignoreCase = true) } ?: true
+            val matchIngredient = ingredientsQuery.isEmpty() || ingredientsQuery.any { query ->
+                cocktail.ingredients.ingredients.any { ing -> ing.name.equals(query, ignoreCase = true) }
+            }
+            val matchTag = tagsQuery.isEmpty() || tagsQuery.any {
+                cocktail.tags.tags.any { tagId ->
+                    allTags.tags.any { it.id == tagId.id }
+                }
+            }
+
+            matchName && matchIngredient && matchTag
+        }
+
+        return ExposedCocktailList(filtered)
+    }
+
     private suspend fun performHuggingFaceApiCall(
         prompt: String,
         candidateLabels: List<String>
@@ -98,32 +152,28 @@ class SearchService(private val database: Database) {
             "AI_TOKEN not found in environment"
         }
 
-        return coroutineScope {
-            async {
-                val rawResponse = client.post(url) {
-                    headers {
-                        append(HttpHeaders.Authorization, "Bearer $token")
-                    }
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        HuggingFaceSearchRequest(
-                            inputs = prompt,
-                            parameters = Parameters(
-                                candidate_labels = candidateLabels
-                            )
-                        )
-                    )
-                    timeout {
-                        requestTimeoutMillis = 30_000
-                    }
-                }.bodyAsText()
-
-                println("Raw AI response: $rawResponse")
-                client.close()
-
-                Json.decodeFromString<SearchResponse>(rawResponse)
+        val rawResponse = client.post(url) {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $token")
             }
-        }.await()
+            contentType(ContentType.Application.Json)
+            setBody(
+                HuggingFaceSearchRequest(
+                    inputs = prompt,
+                    parameters = Parameters(
+                        candidate_labels = candidateLabels
+                    )
+                )
+            )
+            timeout {
+                requestTimeoutMillis = 30_000
+            }
+        }.bodyAsText()
+
+        println("Raw AI response: $rawResponse")
+        client.close()
+
+        return Json.decodeFromString<SearchResponse>(rawResponse)
     }
 
     private fun SearchResponse.computeAcceptableLabels() =
