@@ -1,5 +1,8 @@
 package com.zioanacleto
 
+import com.zioanacleto.protection.configureSecurity
+import com.zioanacleto.protection.configureTokenValidation
+import com.zioanacleto.protection.startRateLimitCleanup
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
@@ -20,7 +23,9 @@ fun Application.module() {
         )
     }
 
-    configureTokenValidation()
+    // configureTokenValidation()
+    configureSecurity()
+    startRateLimitCleanup()
     configureSerialization()
     configureRouting(configureDatabase())
 }
