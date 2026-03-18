@@ -9,8 +9,10 @@ const val API_KEY_HEADER = "X-API-Key"
 
 val validApiKeys = System.getenv("API_KEYS")
     ?.split(",")
-    ?.toSet()
-    ?: emptySet()
+    ?.associate {
+        val (name, key) = it.split(":")
+        key to name
+    } ?: emptyMap()
 
 val ipLimiter = RateLimiter(
     maxRequests = 120,
