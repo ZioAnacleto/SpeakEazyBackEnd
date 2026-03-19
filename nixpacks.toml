@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["openjdk17"]
-
-[phases.build]
-cmds = ["./gradlew fatJar"]
-
-[phases.start]
-cmd = "java -jar build/libs/SpeakEazyBackEnd-all.jar"
