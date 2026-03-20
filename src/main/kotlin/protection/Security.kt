@@ -72,6 +72,7 @@ fun Application.configureSecurity() {
             return@intercept
         }
 
+        log.info("SecurityInfo - API_KEY=$apiKeyName IP=$ip PATH=$path METHOD=$method")
         call.response.headers.append("X-RateLimit-IP-Remaining", ipRemaining.toString())
         call.response.headers.append("X-RateLimit-Key-Remaining", keyRemaining.toString())
     }
