@@ -2,21 +2,25 @@ package com.zioanacleto.ingredients
 
 import com.zioanacleto.baseGetApi
 import com.zioanacleto.basePostApi
+import com.zioanacleto.ingredients.service.IngredientsService
 import io.ktor.http.*
+import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.Database
+import org.koin.ktor.ext.inject
 
-fun Routing.setupIngredientsRouting(database: Database) {
-    val ingredientsService = IngredientsService(database)
+fun Routing.setupIngredientsRouting() {
+    val ingredientsService: IngredientsService by inject()
 
     // Add new ingredient
     post("ingredients/add") {
         val ingredient = call.receive<ExposedIngredient>()
         val jsonIngredient = Json.encodeToString(ingredient)
-        println("Adding ingredient: $jsonIngredient")
+        val log = call.application.log
+
+        log.debug("Adding ingredient: $jsonIngredient")
 
         basePostApi(ingredient) {
             val id = ingredientsService.create(ingredient)

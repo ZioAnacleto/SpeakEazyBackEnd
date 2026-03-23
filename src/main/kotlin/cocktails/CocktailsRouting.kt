@@ -1,25 +1,28 @@
 package com.zioanacleto.cocktails
 
 import com.zioanacleto.*
+import com.zioanacleto.cocktails.service.CocktailsService
 import io.ktor.http.*
+import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.Database
+import org.koin.ktor.ext.inject
 
-fun Routing.setupCocktailsRouting(database: Database) {
-    val cocktailService = CocktailService(database)
+fun Routing.setupCocktailsRouting() {
+    val cocktailsService: CocktailsService by inject()
 
     // Add new cocktail
     post("/cocktails/add") {
+        val log = call.application.log
         val cocktailText = call.receiveText()
-        println(cocktailText)
+        log.debug(cocktailText)
         val cocktail = Json.decodeFromString<ExposedCocktail>(cocktailText)
-        println("Adding cocktail: $cocktail")
+        log.debug("Adding cocktail: {}", cocktail)
 
         basePostApi(cocktail) {
-            val id = cocktailService.create(cocktail)
+            val id = cocktailsService.create(cocktail)
             call.respond(HttpStatusCode.Created, id)
 
             id
@@ -29,7 +32,7 @@ fun Routing.setupCocktailsRouting(database: Database) {
     // Get all cocktails
     get("/cocktails") {
         baseGetApi {
-            val cocktails = cocktailService.readAll()
+            val cocktails = cocktailsService.readAll()
             call.respond(HttpStatusCode.OK, cocktails)
 
             cocktails
@@ -41,7 +44,7 @@ fun Routing.setupCocktailsRouting(database: Database) {
         baseGetApi {
             call.setCacheControl(CACHE_CONTROL_ONE_MINUTE)
             val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
-            val cocktail = cocktailService.readSingle(id)
+            val cocktail = cocktailsService.readSingle(id)
 
             cocktail?.let { returnedCocktail ->
                 call.respond(HttpStatusCode.OK, returnedCocktail)
@@ -58,7 +61,7 @@ fun Routing.setupCocktailsRouting(database: Database) {
         basePutApi {
             val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
 
-            val updatedCocktails = cocktailService.updateVisualizations(id)
+            val updatedCocktails = cocktailsService.updateVisualizations(id)
             call.respond(HttpStatusCode.OK, updatedCocktails)
 
             updatedCocktails

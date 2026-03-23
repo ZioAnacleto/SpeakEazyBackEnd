@@ -8,14 +8,12 @@ import kotlin.test.assertEquals
 
 class ApplicationTest {
 
-    // @Test
+    @Test
     fun testRoot() = testApplication {
-        application {
-            module()
-        }
+        // generic setup
+        application { module() }
         client.get("/").apply {
-            assertEquals(HttpStatusCode.OK, status)
+            assertEquals(HttpStatusCode.Unauthorized, status)
         }
     }
-
 }

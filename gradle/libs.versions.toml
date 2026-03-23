@@ -8,6 +8,7 @@ logback-version = "1.4.14"
 postgres = "42.7.3"
 cloudinary = "1.10.0"
 kotlinx-serialization-json = "1.6.3"
+koin = "3.5.3"
 
 [libraries]
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor-version" }
@@ -32,7 +33,13 @@ cloudinary = { module = "com.cloudinary:kotlin-url-gen", version.ref = "cloudina
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 
+koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
+koin-logger = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
+
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor-version" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-version" }
+
+[bundles]
+koin = ["koin-ktor", "koin-logger"]

@@ -1,13 +1,15 @@
-package com.zioanacleto.tags
+package com.zioanacleto.tags.repository
 
 import com.zioanacleto.dbQuery
+import com.zioanacleto.tags.ExposedTag
+import com.zioanacleto.tags.ExposedTagList
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class TagsService(database: Database) {
+class TagsRepositoryImpl(database: Database) : TagsRepository {
     object Tags : Table() {
         val id = integer(DB_KEY_ID).autoIncrement()
         val name = varchar(DB_KEY_NAME, length = 100)
@@ -19,8 +21,8 @@ class TagsService(database: Database) {
         }
     }
 
-    suspend fun readAll(): ExposedTagList {
-        return dbQuery {
+    override suspend fun readAll(): ExposedTagList =
+        dbQuery {
             ExposedTagList(
                 Tags.selectAll()
                     .mapNotNull {
@@ -31,7 +33,6 @@ class TagsService(database: Database) {
                     }
             )
         }
-    }
 
     companion object {
         private const val DB_KEY_ID = "id"

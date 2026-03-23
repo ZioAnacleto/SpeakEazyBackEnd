@@ -1,6 +1,8 @@
 package com.zioanacleto
 
 import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -10,6 +12,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.util.Calendar
+import kotlin.math.log
 
 suspend fun <T> dbQuery(block: suspend () -> T): T =
     newSuspendedTransaction(Dispatchers.IO) { block() }
@@ -38,9 +41,30 @@ private suspend fun <Response> RoutingContext.baseApiWithResponse(
     verb: String,
     specificApiBlock: suspend RoutingContext.() -> Response
 ) {
-    println("Api call in $verb: ${call.request.uri}, time: ${Calendar.getInstance().time}")
+    val log = call.application.log
+    val path = call.request.uri
+    val ip = call.request.origin.remoteHost
+    val apiKeyName = call.request.headers["X-API-Key"]
+
+    log.info(
+        "Request - method={} path={} ip={} apiKey={}",
+        verb,
+        path,
+        ip,
+        apiKeyName
+    )
+
+    val start = System.currentTimeMillis()
     val response = specificApiBlock()
-    println("Response: $response, time: ${Calendar.getInstance().time}")
+    val duration = System.currentTimeMillis() - start
+
+    log.info(
+        "API response - method={} path={} duration={}ms response={}",
+        verb,
+        path,
+        duration,
+        response
+    )
 }
 
 private suspend fun <Request, Response> RoutingContext.baseApiWithRequestAndResponse(
@@ -48,10 +72,31 @@ private suspend fun <Request, Response> RoutingContext.baseApiWithRequestAndResp
     request: Request,
     specificApiBlock: suspend RoutingContext.() -> Response
 ) {
-    println("Api call in $verb: ${call.request.uri}, time: ${Calendar.getInstance().time}")
-    println("Request: $request")
+    val log = call.application.log
+    val path = call.request.uri
+    val ip = call.request.origin.remoteHost
+    val apiKeyName = call.request.headers["X-API-Key"]
+
+    log.info(
+        "Request - method={} path={} ip={} apiKey={}, request={}",
+        verb,
+        path,
+        ip,
+        apiKeyName,
+        request
+    )
+
+    val start = System.currentTimeMillis()
     val response = specificApiBlock()
-    println("Response: $response, time: ${Calendar.getInstance().time}")
+    val duration = System.currentTimeMillis() - start
+
+    log.info(
+        "API response - method={} path={} duration={}ms response={}",
+        verb,
+        path,
+        duration,
+        response
+    )
 }
 
 suspend fun <Response> asyncCall(block: suspend CoroutineScope.() -> Response) =

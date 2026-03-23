@@ -5,10 +5,10 @@ import com.zioanacleto.setCacheControl
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.jetbrains.exposed.sql.Database
+import org.koin.ktor.ext.inject
 
-fun Routing.setupHomeRouting(database: Database) {
-    val homeService = HomeService(database)
+fun Routing.setupHomeRouting() {
+    val homeService: HomeService by inject()
 
     // Get home sections containing cocktails
     get("/home") {

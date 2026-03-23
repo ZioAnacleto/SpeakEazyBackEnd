@@ -1,12 +1,11 @@
 package com.zioanacleto.home
 
-import com.zioanacleto.cocktails.CocktailService
+import com.zioanacleto.cocktails.service.CocktailsService
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import org.jetbrains.exposed.sql.Database
 
-class HomeService(private val database: Database) {
+class HomeService(private val cocktailsService: CocktailsService) {
 
     suspend fun homeSections(): ExposedHomeSectionsList = coroutineScope {
         val config = HomeConfigManager.loadConfig()
@@ -14,17 +13,16 @@ class HomeService(private val database: Database) {
         val allSections = config.sections.shuffled().take(config.numberOfSections)
         // take only one banner (if any) from allSections
         val bannerSection = allSections.findBanner()
-        val cocktailService = CocktailService(database)
 
         var id = 0
         // mapping all sections but banner
         val sectionDeferreds = allSections.filterOutBanner().map { section ->
             async {
                 val cocktails = when (section.type.toType()) {
-                    SectionType.CATEGORY -> cocktailService.readAllWithCategory(section.query!!).cocktails
-                    SectionType.TYPE -> cocktailService.readAllWithType(section.query!!).cocktails
-                    SectionType.POPULAR -> cocktailService.readMostPopular(section.limit!!).cocktails
-                    SectionType.INGREDIENT -> cocktailService.readAllWithIngredient(section.query!!).cocktails
+                    SectionType.CATEGORY -> cocktailsService.readAllWithCategory(section.query!!).cocktails
+                    SectionType.TYPE -> cocktailsService.readAllWithType(section.query!!).cocktails
+                    SectionType.POPULAR -> cocktailsService.readMostPopular(section.limit!!).cocktails
+                    SectionType.INGREDIENT -> cocktailsService.readAllWithIngredient(section.query!!).cocktails
                     else -> emptyList()
                 }
                 ExposedHomeSection(
@@ -38,7 +36,7 @@ class HomeService(private val database: Database) {
         val exposedSections = sectionDeferreds.awaitAll()
         // mapping banner if available
         val banner = bannerSection?.let { section ->
-            val cocktail = cocktailService.readSingleWithName(section.query!!)
+            val cocktail = cocktailsService.readSingleWithName(section.query!!)
             cocktail?.let { foundCocktail ->
                 ExposedBanner(
                     position = section.position!!,

@@ -1,10 +1,13 @@
-package com.zioanacleto.ingredients
+package com.zioanacleto.ingredients.repository
 
 import com.zioanacleto.dbQuery
+import com.zioanacleto.ingredients.ExposedIngredient
+import com.zioanacleto.ingredients.ExposedIngredients
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class IngredientsService(database: Database) {
+class IngredientsRepositoryImpl(database: Database) : IngredientsRepository {
+
     object Ingredients : Table() {
         val id = integer(DB_KEY_ID).autoIncrement().uniqueIndex()
         val name = varchar(DB_KEY_NAME, 500)
@@ -17,14 +20,14 @@ class IngredientsService(database: Database) {
         }
     }
 
-    suspend fun create(ingredient: ExposedIngredient): Int = dbQuery {
+    override suspend fun create(ingredient: ExposedIngredient): Int = dbQuery {
         Ingredients.insert {
             it[name] = ingredient.name
             it[image] = ingredient.imageUrl
         }[Ingredients.id]
     }
 
-    suspend fun readSingle(id: Int): ExposedIngredient? =
+    override suspend fun readSingle(id: Int): ExposedIngredient? =
         dbQuery {
             Ingredients.selectAll()
                 .where { Ingredients.id eq id }
@@ -33,8 +36,7 @@ class IngredientsService(database: Database) {
                 }.singleOrNull()
         }
 
-    // todo: pagination?
-    suspend fun readAll(): ExposedIngredients = dbQuery {
+    override suspend fun readAll(): ExposedIngredients = dbQuery {
         ExposedIngredients(
             Ingredients.selectAll()
                 .mapNotNull { it.createIngredient() }

@@ -1,31 +1,32 @@
 package com.zioanacleto.search
 
 import com.zioanacleto.asyncCall
-import com.zioanacleto.cocktails.CocktailService
 import com.zioanacleto.cocktails.ExposedCocktailList
-import com.zioanacleto.ingredients.IngredientsService
-import com.zioanacleto.tags.TagsService
+import com.zioanacleto.cocktails.service.CocktailsService
+import com.zioanacleto.ingredients.service.IngredientsService
+import com.zioanacleto.tags.service.TagsService
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.Database
+import org.slf4j.LoggerFactory
 
-class SearchService(private val database: Database) {
+class SearchService(
+    private val cocktailsService: CocktailsService,
+    private val ingredientsService: IngredientsService,
+    private val tagsService: TagsService,
+    private val httpClient: HttpClient
+) {
+    private val log = LoggerFactory.getLogger(SearchService::class.java)
 
     suspend fun searchForCocktails(query: String): ExposedCocktailList {
         return try {
-            val cocktailsService = CocktailService(database)
-
             // retrieve data from DB (cocktails, ingredients, tags)
             val cocktails = asyncCall { cocktailsService.readAll() }
 
-            println("Search service, request: $query")
+            log.debug("SearchForCocktails, request: {}", query)
 
             val matchingCocktails = cocktails.cocktails.filter { cocktail ->
                 val matchName = cocktail.name.contains(query, ignoreCase = true)
@@ -39,7 +40,7 @@ class SearchService(private val database: Database) {
 
             ExposedCocktailList(matchingCocktails)
         } catch (exception: Exception) {
-            println("Error while calling search API: ${exception.message}")
+            log.debug("Error while calling searchForCocktails API: ${exception.message}")
             exception.printStackTrace()
 
             throw exception
@@ -48,16 +49,12 @@ class SearchService(private val database: Database) {
 
     suspend fun searchForCocktailsUsingHuggingFace(prompt: SearchRequest): ExposedCocktailList {
         return try {
-            val cocktailsService = CocktailService(database)
-            val ingredientsService = IngredientsService(database)
-            val tagsService = TagsService(database)
-
             // retrieve data from DB (cocktails, ingredients, tags)
             val cocktails = asyncCall { cocktailsService.readAll() }
             val ingredients = asyncCall { ingredientsService.readAll() }
             val tags = asyncCall { tagsService.readAll() }
 
-            println("Search service, request: $prompt")
+            log.debug("searchForCocktailsUsingHuggingFace, request: {}", prompt)
 
             // perform two different api calls in parallel
             val tagsResponse = asyncCall {
@@ -73,21 +70,21 @@ class SearchService(private val database: Database) {
                 )
             }
 
-            println("Search api called, tagsResponse: $tagsResponse")
-            println("Search api called, ingredientsResponse: $ingredientsResponse")
+            log.debug("Search api called, tagsResponse: {}", tagsResponse)
+            log.debug("Search api called, ingredientsResponse: {}", ingredientsResponse)
 
             // select tags and ingredients over threshold, that match the prompt the most
             val tagsOverThreshold = tagsResponse.computeAcceptableLabels()
             val ingredientsOverThreshold = ingredientsResponse.computeAcceptableLabels()
 
-            println("Tags that are over threshold: $tagsOverThreshold")
-            println("Ingredients that are over threshold: $ingredientsOverThreshold")
+            log.debug("Tags that are over threshold: {}", tagsOverThreshold)
+            log.debug("Ingredients that are over threshold: {}", ingredientsOverThreshold)
 
             // find ingredients that match
             val ingredientsThatMatch = ingredients.ingredients
                 .filter { ingredient -> ingredientsOverThreshold.any { it == ingredient.name } }
 
-            println("Ingredients contained in labels: $ingredientsThatMatch")
+            log.debug("Ingredients contained in labels: {}", ingredientsThatMatch)
 
             // find cocktail using those ingredients
             val cocktailsThatMatchIngredients = cocktails.cocktails
@@ -97,11 +94,11 @@ class SearchService(private val database: Database) {
                     }
                 }
 
-            println("Cocktails that match ingredients: $cocktailsThatMatchIngredients")
+            log.debug("Cocktails that match ingredients: {}", cocktailsThatMatchIngredients)
 
             ExposedCocktailList(cocktailsThatMatchIngredients)
         } catch (exception: Exception) {
-            println("Error while calling search API: ${exception.message}")
+            log.debug("Error while calling searchForCocktailsUsingHuggingFace API: ${exception.message}")
             exception.printStackTrace()
 
             throw exception
@@ -115,8 +112,8 @@ class SearchService(private val database: Database) {
         tagsQuery: List<String> = emptyList()
     ): ExposedCocktailList {
         // reading from DB
-        val allCocktails = asyncCall { CocktailService(database).readAll() }
-        val allTags = asyncCall { TagsService(database).readAll() }
+        val allCocktails = asyncCall { cocktailsService.readAll() }
+        val allTags = asyncCall { tagsService.readAll() }
 
         val filtered = allCocktails.cocktails.filter { cocktail ->
             val matchName = nameQuery?.let { cocktail.name.contains(it, ignoreCase = true) } ?: true
@@ -139,12 +136,6 @@ class SearchService(private val database: Database) {
         prompt: String,
         candidateLabels: List<String>
     ): SearchResponse {
-        val client = HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json()
-            }
-        }
-
         val url = requireNotNull(System.getenv("AI_URL")) {
             "AI_URL not found in environment"
         }
@@ -152,7 +143,7 @@ class SearchService(private val database: Database) {
             "AI_TOKEN not found in environment"
         }
 
-        val rawResponse = client.post(url) {
+        val rawResponse = httpClient.post(url) {
             headers {
                 append(HttpHeaders.Authorization, "Bearer $token")
             }
@@ -170,8 +161,7 @@ class SearchService(private val database: Database) {
             }
         }.bodyAsText()
 
-        println("Raw AI response: $rawResponse")
-        client.close()
+        log.debug("Raw AI response: $rawResponse")
 
         return Json.decodeFromString<SearchResponse>(rawResponse)
     }
