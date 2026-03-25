@@ -1,9 +1,13 @@
-package com.zioanacleto.search
+package com.zioanacleto.search.service
 
 import com.zioanacleto.asyncCall
 import com.zioanacleto.cocktails.ExposedCocktailList
 import com.zioanacleto.cocktails.service.CocktailsService
 import com.zioanacleto.ingredients.service.IngredientsService
+import com.zioanacleto.search.HuggingFaceSearchRequest
+import com.zioanacleto.search.Parameters
+import com.zioanacleto.search.SearchRequest
+import com.zioanacleto.search.SearchResponse
 import com.zioanacleto.tags.service.TagsService
 import io.ktor.client.*
 import io.ktor.client.plugins.*
@@ -13,15 +17,15 @@ import io.ktor.http.*
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 
-class SearchService(
+class SearchServiceImpl(
     private val cocktailsService: CocktailsService,
     private val ingredientsService: IngredientsService,
     private val tagsService: TagsService,
     private val httpClient: HttpClient
-) {
-    private val log = LoggerFactory.getLogger(SearchService::class.java)
+) : SearchService {
+    private val log = LoggerFactory.getLogger(SearchServiceImpl::class.java)
 
-    suspend fun searchForCocktails(query: String): ExposedCocktailList {
+    override suspend fun searchForCocktails(query: String): ExposedCocktailList {
         return try {
             // retrieve data from DB (cocktails, ingredients, tags)
             val cocktails = asyncCall { cocktailsService.readAll() }
@@ -47,7 +51,7 @@ class SearchService(
         }
     }
 
-    suspend fun searchForCocktailsUsingHuggingFace(prompt: SearchRequest): ExposedCocktailList {
+    override suspend fun searchForCocktailsUsingHuggingFace(prompt: SearchRequest): ExposedCocktailList {
         return try {
             // retrieve data from DB (cocktails, ingredients, tags)
             val cocktails = asyncCall { cocktailsService.readAll() }
@@ -106,10 +110,10 @@ class SearchService(
     }
 
     // To be updated to a more scalable version
-    suspend fun filterCocktails(
+    override suspend fun filterCocktails(
         nameQuery: String?,
-        ingredientsQuery: List<String> = emptyList(),
-        tagsQuery: List<String> = emptyList()
+        ingredientsQuery: List<String>,
+        tagsQuery: List<String>
     ): ExposedCocktailList {
         // reading from DB
         val allCocktails = asyncCall { cocktailsService.readAll() }
@@ -136,10 +140,10 @@ class SearchService(
         prompt: String,
         candidateLabels: List<String>
     ): SearchResponse {
-        val url = requireNotNull(System.getenv("AI_URL")) {
+        val url = requireNotNull(System.getProperty("AI_URL")) {
             "AI_URL not found in environment"
         }
-        val token = requireNotNull(System.getenv("AI_TOKEN")) {
+        val token = requireNotNull(System.getProperty("AI_TOKEN")) {
             "AI_TOKEN not found in environment"
         }
 

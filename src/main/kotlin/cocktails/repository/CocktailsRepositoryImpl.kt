@@ -12,7 +12,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class CocktailRepositoryImpl(
     database: Database,
     private val ingredientsService: IngredientsService
-): CocktailsRepository {
+) : CocktailsRepository {
     object Cocktails : Table() {
         val id = integer(DB_KEY_ID).autoIncrement().uniqueIndex()
         val name = varchar(DB_KEY_NAME, length = 500)
@@ -42,8 +42,10 @@ class CocktailRepositoryImpl(
                 """ 
                 SELECT setval( 
                     'cocktails_id_seq', 
-                    (SELECT COALESCE(MAX(id), 0) FROM cocktails)
-                ) """.trimIndent()
+                    (SELECT COALESCE(MAX(id), 1) FROM cocktails),
+                    true
+                )
+                """.trimIndent()
             )
         }
     }
@@ -108,7 +110,7 @@ class CocktailRepositoryImpl(
             // Create ExposedCocktailIngredient objects from Ingredients table
             val ingredients = ingredientsService.readAll()
                 .ingredients
-                .filter { ingredientsIds.contains(id) }
+                .filter { ingredientsIds.contains(it.id.toInt()) }
                 .map {
                     val cocktailIngredient = cocktail?.ingredients?.ingredients?.find { ing ->
                         ing.id == it.id

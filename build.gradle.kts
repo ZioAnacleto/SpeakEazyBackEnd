@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     application
@@ -39,12 +40,27 @@ dependencies {
     implementation(libs.bundles.koin)
 
     testImplementation(libs.ktor.server.test.host)
+    testImplementation(libs.ktor.client.mock)
     testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.testcontainers.postgre)
+    testImplementation(libs.mockk)
 }
 
 tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "com.zioanacleto.ApplicationKt"
+    }
+}
+
+tasks.withType<Test> {
+    testLogging {
+        events(
+            TestLogEvent.STARTED,
+            TestLogEvent.PASSED,
+            TestLogEvent.FAILED,
+            TestLogEvent.SKIPPED
+        )
+        showStandardStreams = true
     }
 }
 

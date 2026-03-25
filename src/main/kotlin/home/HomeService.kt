@@ -1,14 +1,18 @@
 package com.zioanacleto.home
 
 import com.zioanacleto.cocktails.service.CocktailsService
+import com.zioanacleto.home.provider.HomeConfigProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 
-class HomeService(private val cocktailsService: CocktailsService) {
+class HomeService(
+    private val cocktailsService: CocktailsService,
+    private val homeConfigProvider: HomeConfigProvider
+) {
 
     suspend fun homeSections(): ExposedHomeSectionsList = coroutineScope {
-        val config = HomeConfigManager.loadConfig()
+        val config = homeConfigProvider.loadConfig()
         // take [numberOfSections] sections shuffled (including banners)
         val allSections = config.sections.shuffled().take(config.numberOfSections)
         // take only one banner (if any) from allSections

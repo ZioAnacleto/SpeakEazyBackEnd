@@ -3,12 +3,12 @@ package com.zioanacleto.search
 import com.zioanacleto.baseGetApi
 import com.zioanacleto.basePostApi
 import com.zioanacleto.cocktails.ExposedCocktailList
+import com.zioanacleto.search.service.SearchService
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.jetbrains.exposed.sql.Database
 import org.koin.ktor.ext.inject
 
 fun Routing.setupSearchRouting() {
