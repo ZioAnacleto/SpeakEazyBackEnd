@@ -1,10 +1,15 @@
-package com.zioanacleto.home
+package com.zioanacleto.home.provider
 
+import com.zioanacleto.home.HomeSectionsConfig
 import kotlinx.serialization.json.Json
 import java.io.File
 
-object HomeConfigManager {
-    private const val FILE_NAME = "home_sections.json"
+class HomeConfigProviderImpl : HomeConfigProvider {
+
+    companion object {
+        private const val FILE_NAME = "home_sections.json"
+    }
+
     private val json = Json {
         ignoreUnknownKeys = true
         prettyPrint = true
@@ -27,11 +32,11 @@ object HomeConfigManager {
         }
     }
 
-    fun loadConfig(): HomeSectionsConfig {
+    override fun loadConfig(): HomeSectionsConfig {
         return json.decodeFromString(configFile.readText())
     }
 
-    fun updateConfig(newContent: HomeSectionsConfig) {
+    override fun updateConfig(newContent: HomeSectionsConfig) {
         configFile.writeText(json.encodeToString(newContent))
     }
 }

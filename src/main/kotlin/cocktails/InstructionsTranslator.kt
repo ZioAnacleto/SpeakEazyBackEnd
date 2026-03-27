@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory
 class InstructionsTranslator(
     private val client: HttpClient
 ) {
-
     private val log = LoggerFactory.getLogger(InstructionsTranslator::class.java)
 
     companion object {
