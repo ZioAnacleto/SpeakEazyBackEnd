@@ -1,5 +1,7 @@
 package com.zioanacleto.di
 
+import com.zioanacleto.admin.EnvironmentKeysProvider
+import com.zioanacleto.admin.EnvironmentKeysProviderImpl
 import com.zioanacleto.cocktails.InstructionsTranslator
 import com.zioanacleto.cocktails.repository.CocktailRepositoryImpl
 import com.zioanacleto.cocktails.repository.CocktailsRepository
@@ -26,15 +28,16 @@ import org.koin.dsl.module
 val appModule = module {
     // Singletons
     single { configureClient() }
-    single { InstructionsTranslator(get()) }
+    single { InstructionsTranslator(get(), get()) }
     single<Database> { configureDatabase() }
     single<HomeConfigProvider> { HomeConfigProviderImpl() }
+    single<EnvironmentKeysProvider> { EnvironmentKeysProviderImpl() }
 
     // Services
     single<CocktailsService> { CocktailsServiceImpl(get(), get()) }
     single<IngredientsService> { IngredientsServiceImpl(get()) }
     single<TagsService> { TagsServiceImpl(get()) }
-    single<SearchService> { SearchServiceImpl(get(), get(), get(), get()) }
+    single<SearchService> { SearchServiceImpl(get(), get(), get(), get(), get()) }
     single { HomeService(get(), get()) }
 
     // Repositories

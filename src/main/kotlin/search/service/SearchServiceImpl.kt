@@ -1,5 +1,7 @@
 package com.zioanacleto.search.service
 
+import com.zioanacleto.admin.EnvironmentKey
+import com.zioanacleto.admin.EnvironmentKeysProvider
 import com.zioanacleto.asyncCall
 import com.zioanacleto.cocktails.ExposedCocktailList
 import com.zioanacleto.cocktails.service.CocktailsService
@@ -21,7 +23,8 @@ class SearchServiceImpl(
     private val cocktailsService: CocktailsService,
     private val ingredientsService: IngredientsService,
     private val tagsService: TagsService,
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val keysProvider: EnvironmentKeysProvider
 ) : SearchService {
     private val log = LoggerFactory.getLogger(SearchServiceImpl::class.java)
 
@@ -140,11 +143,11 @@ class SearchServiceImpl(
         prompt: String,
         candidateLabels: List<String>
     ): SearchResponse {
-        val url = requireNotNull(System.getProperty("AI_URL")) {
-            "AI_URL not found in environment"
+        val url = requireNotNull(keysProvider.provideKey(EnvironmentKey.SEARCH_AI_URL)) {
+            "${EnvironmentKey.SEARCH_AI_URL.key} not found in environment"
         }
-        val token = requireNotNull(System.getProperty("AI_TOKEN")) {
-            "AI_TOKEN not found in environment"
+        val token = requireNotNull(keysProvider.provideKey(EnvironmentKey.AI_TOKEN)) {
+            "${EnvironmentKey.AI_TOKEN.key} not found in environment"
         }
 
         val rawResponse = httpClient.post(url) {

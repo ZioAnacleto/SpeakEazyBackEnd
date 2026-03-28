@@ -1,5 +1,6 @@
 package search.service
 
+import com.zioanacleto.admin.EnvironmentKeysProvider
 import com.zioanacleto.cocktails.*
 import com.zioanacleto.cocktails.service.CocktailsService
 import com.zioanacleto.ingredients.ExposedIngredient
@@ -18,6 +19,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -30,12 +32,14 @@ class SearchServiceImplTest {
     private lateinit var ingredientsService: IngredientsService
     private lateinit var tagsService: TagsService
     private lateinit var httpClient: HttpClient
+    private lateinit var keysProvider: EnvironmentKeysProvider
 
     @Before
     fun setup() {
         cocktailsService = mockk()
         ingredientsService = mockk()
         tagsService = mockk()
+        keysProvider = mockk()
     }
 
     // --------------------------------
@@ -200,8 +204,7 @@ class SearchServiceImplTest {
         )
 
         // env vars
-        setEnv("AI_URL", "http://fake")
-        setEnv("AI_TOKEN", "token")
+        every { keysProvider.provideKey(any()) } returns "testLink"
 
         val service = createSut()
         val result = service.searchForCocktailsUsingHuggingFace(
@@ -220,7 +223,8 @@ class SearchServiceImplTest {
         cocktailsService,
         ingredientsService,
         tagsService,
-        httpClient
+        httpClient,
+        keysProvider
     )
 
     private fun mockHttpClient(
