@@ -1,46 +1,42 @@
 package com.zioanacleto.cocktails
 
+import com.zioanacleto.admin.EnvironmentKey
+import com.zioanacleto.admin.EnvironmentKeysProvider
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 
 class InstructionsTranslator(
-    private val client: HttpClient
+    private val client: HttpClient,
+    private val keysProvider: EnvironmentKeysProvider
 ) {
     private val log = LoggerFactory.getLogger(InstructionsTranslator::class.java)
-
-    companion object {
-        private const val AI_URL_EN_IT = "TRANSLATION_AI_URL_EN_IT"
-        private const val AI_URL_IT_EN = "TRANSLATION_AI_URL_IT_EN"
-        private const val AI_TOKEN = "AI_TOKEN"
-    }
 
     suspend fun translate(
         text: String,
         isFromEnglish: Boolean = true
     ): String {
-        val urlConstant = if (isFromEnglish) AI_URL_EN_IT else AI_URL_IT_EN
+        val environmentKey = if (isFromEnglish)
+            EnvironmentKey.TRANSLATION_ENGLISH_ITALIAN
+        else EnvironmentKey.TRANSLATION_ITALIAN_ENGLISH
 
         val url = requireNotNull(
-            System.getenv(urlConstant)
-        ) { "$urlConstant not found in environment" }
+            keysProvider.provideKey(environmentKey)
+        ) { "${environmentKey.key} not found in environment" }
 
-        val token = requireNotNull(System.getenv(AI_TOKEN)) {
-            "AI_TOKEN not found in environment"
+        val token = requireNotNull(keysProvider.provideKey(EnvironmentKey.AI_TOKEN)) {
+            "${EnvironmentKey.AI_TOKEN.key} not found in environment"
         }
 
         return coroutineScope {
             async {
-                log.info("Translation request - direction={} textLength={}",
+                log.info(
+                    "Translation request - direction={} textLength={}",
                     if (isFromEnglish) "EN->IT" else "IT->EN",
                     text.length
                 )
