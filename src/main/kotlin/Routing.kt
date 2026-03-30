@@ -3,6 +3,7 @@ package com.zioanacleto
 import com.zioanacleto.admin.setupAdminRouting
 import com.zioanacleto.cocktails.setupCocktailsRouting
 import com.zioanacleto.home.setupHomeRouting
+import com.zioanacleto.i18n.setupI18nRouting
 import com.zioanacleto.ingredients.setupIngredientsRouting
 import com.zioanacleto.search.setupSearchRouting
 import com.zioanacleto.tags.setupTagsRouting
@@ -24,5 +25,6 @@ fun Application.configureRouting() {
         setupSearchRouting()
         setupTagsRouting()
         setupAdminRouting()
+        setupI18nRouting()
     }
 }
