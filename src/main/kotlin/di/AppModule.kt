@@ -12,6 +12,10 @@ import com.zioanacleto.configureDatabase
 import com.zioanacleto.home.HomeService
 import com.zioanacleto.home.provider.HomeConfigProvider
 import com.zioanacleto.home.provider.HomeConfigProviderImpl
+import com.zioanacleto.i18n.repository.I18nRepository
+import com.zioanacleto.i18n.repository.I18nRepositoryImpl
+import com.zioanacleto.i18n.service.I18nService
+import com.zioanacleto.i18n.service.I18nServiceImpl
 import com.zioanacleto.ingredients.repository.IngredientsRepository
 import com.zioanacleto.ingredients.repository.IngredientsRepositoryImpl
 import com.zioanacleto.ingredients.service.IngredientsService
@@ -39,9 +43,11 @@ val appModule = module {
     single<TagsService> { TagsServiceImpl(get()) }
     single<SearchService> { SearchServiceImpl(get(), get(), get(), get(), get()) }
     single { HomeService(get(), get()) }
+    single<I18nService> { I18nServiceImpl(get(), get()) }
 
     // Repositories
     single<CocktailsRepository> { CocktailRepositoryImpl(get(), get()) }
     single<IngredientsRepository> { IngredientsRepositoryImpl(get()) }
     single<TagsRepository> { TagsRepositoryImpl(get()) }
+    single<I18nRepository> { I18nRepositoryImpl(get()) }
 }
