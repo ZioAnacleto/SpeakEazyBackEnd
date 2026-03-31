@@ -1,8 +1,12 @@
 package cocktails.service
 
-import com.zioanacleto.cocktails.*
+import com.zioanacleto.cocktails.ExposedCocktail
+import com.zioanacleto.cocktails.ExposedCocktailInstruction
+import com.zioanacleto.cocktails.ExposedCocktailList
+import com.zioanacleto.cocktails.ExposedCocktailTags
 import com.zioanacleto.cocktails.repository.CocktailsRepository
 import com.zioanacleto.cocktails.service.CocktailsServiceImpl
+import com.zioanacleto.i18n.translator.Translator
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -14,7 +18,7 @@ import kotlin.test.Test
 class CocktailsServiceImplTest {
 
     private val repository: CocktailsRepository = mockk()
-    private val translator: InstructionsTranslator = mockk()
+    private val translator: Translator = mockk()
 
     private lateinit var service: CocktailsServiceImpl
 
@@ -41,7 +45,7 @@ class CocktailsServiceImplTest {
                 "passo1"
             )
         }
-        coVerify(exactly = 0) { translator.translate(any(), any()) }
+        coVerify(exactly = 0) { translator.translateSingleText(any(), any()) }
 
         assertEquals(1, result)
     }
@@ -54,7 +58,7 @@ class CocktailsServiceImplTest {
         )
 
         coEvery {
-            translator.translate("passo1 passo2", false)
+            translator.translateSingleText("passo1 passo2", false)
         } returns "step1 step2"
 
         coEvery { repository.create(any(), any(), any()) } returns 1
@@ -62,7 +66,7 @@ class CocktailsServiceImplTest {
         val result = service.create(cocktail)
 
         coVerify {
-            translator.translate("passo1 passo2", false)
+            translator.translateSingleText("passo1 passo2", false)
         }
 
         coVerify {
@@ -84,7 +88,7 @@ class CocktailsServiceImplTest {
         )
 
         coEvery {
-            translator.translate("step1 step2", true)
+            translator.translateSingleText("step1 step2", true)
         } returns "passo1 passo2"
 
         coEvery { repository.create(any(), any(), any()) } returns 1
@@ -92,7 +96,7 @@ class CocktailsServiceImplTest {
         val result = service.create(cocktail)
 
         coVerify {
-            translator.translate("step1 step2", true)
+            translator.translateSingleText("step1 step2", true)
         }
 
         coVerify {

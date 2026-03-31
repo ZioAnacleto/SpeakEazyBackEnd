@@ -1,13 +1,13 @@
 package com.zioanacleto.cocktails.service
 
 import com.zioanacleto.cocktails.ExposedCocktail
-import com.zioanacleto.cocktails.InstructionsTranslator
 import com.zioanacleto.cocktails.repository.CocktailsRepository
+import com.zioanacleto.i18n.translator.Translator
 import org.slf4j.LoggerFactory
 
 class CocktailsServiceImpl(
     private val repository: CocktailsRepository,
-    private val instructionsTranslator: InstructionsTranslator
+    private val instructionsTranslator: Translator
 ) : CocktailsService {
     private val log = LoggerFactory.getLogger(CocktailsServiceImpl::class.java)
 
@@ -15,7 +15,7 @@ class CocktailsServiceImpl(
         val cocktailInstructions =
             cocktail.instructions.joinToString(" ") { it.instruction }.ifEmpty {
                 instructionsTranslator
-                    .translate(
+                    .translateSingleText(
                         text = cocktail.instructionsIt.joinToString(" ") { it.instruction },
                         isFromEnglish = false
                     )
@@ -25,7 +25,7 @@ class CocktailsServiceImpl(
         val cocktailInstructionsIt =
             cocktail.instructionsIt.joinToString(" ") { it.instruction }.ifEmpty {
                 instructionsTranslator
-                    .translate(
+                    .translateSingleText(
                         text = cocktail.instructions.joinToString(" ") { it.instruction },
                     )
             }

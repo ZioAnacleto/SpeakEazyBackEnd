@@ -64,8 +64,3 @@ data class ExposedCocktail(
                 "tags: $tags\nuserId: $userId\nusername: $username"
     }
 }
-
-@Serializable
-data class HuggingFaceTranslationRequest(
-    val inputs: String
-)
