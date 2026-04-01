@@ -69,7 +69,17 @@ class I18nRepositoryImpl(
                 (I18nTranslations.textId eq key) and
                         (I18nTranslations.language eq language)
             )
-            .count() > 0
+            .limit(1)
+            .any()
+    }
+
+    override suspend fun getAllTranslations(): List<Pair<String, String>> = dbQuery {
+        I18nTranslations
+            .select(
+                I18nTranslations.textId,
+                I18nTranslations.language
+            )
+            .map { it[I18nTranslations.textId] to it[I18nTranslations.language] }
     }
 
     companion object {

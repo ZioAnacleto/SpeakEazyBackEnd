@@ -22,19 +22,26 @@ class I18nServiceImpl(
         val now = Instant.now().toString()
         var counter = 0
 
+        log.debug("Starting inserting new strings")
         val existingKeys = repository.getAllTextIds().toSet()
+
+        log.debug("existingKeys: {}, size: {}", existingKeys, existingKeys.size)
         val newStrings = request.strings.filter { it.key !in existingKeys }
 
         log.debug("New strings size: {}", newStrings.size)
 
-        // 1️⃣ Insert new keys
+        // Insert new keys
         newStrings.forEach {
             repository.insertNewString(it.key)
         }
 
-        // 2️⃣ Insert base translations
+        log.debug("New strings inserted in DB.")
+
+        val existingTranslations = repository.getAllTranslations().toMutableSet()
+
+        // Insert base translations
         request.strings.forEach { input ->
-            val exists = repository.translationExists(input.key, input.language)
+            val exists = (input.key to input.language) in existingTranslations
 
             if (!exists) {
                 repository.insertNewTranslation(
@@ -43,24 +50,25 @@ class I18nServiceImpl(
                     translationLanguage = input.language,
                     currentDate = now
                 )
+                existingTranslations.add(input.key to input.language)
                 counter++
             }
         }
 
-        // 3️⃣ AUTO TRANSLATION (BATCH)
+        // AI auto translation via batch
         val baseLanguage = "en"
         val targetLanguage = "it"
 
         val baseStrings = request.strings.filter { it.language == baseLanguage }
 
-        // Filtra solo quelli che NON hanno già traduzione
+        // Filter out the already translated textIds
         val toTranslate = baseStrings.filterNot {
-            repository.translationExists(it.key, targetLanguage)
+            (it.key to targetLanguage) in existingTranslations
         }
 
         log.debug("Strings to translate: {}", toTranslate.size)
 
-        // ⚡ Chunk per evitare limiti HuggingFace
+        // Chunk to avoid API limits
         val chunkSize = 20
 
         toTranslate.chunked(chunkSize).forEach { chunk ->
@@ -71,7 +79,7 @@ class I18nServiceImpl(
             } catch (e: Exception) {
                 log.error("Batch translation failed, fallback to single", e)
 
-                // 🔥 fallback intelligente
+                // fallback
                 texts.map { text ->
                     try {
                         translator.translateSingleText(text, true)
@@ -81,7 +89,7 @@ class I18nServiceImpl(
                 }
             }
 
-            // Safety check (importantissimo)
+            // Safety check
             if (translatedTexts.size != chunk.size) {
                 log.error("Mismatch translations size. Fallback chunk.")
                 return@forEach
@@ -94,6 +102,7 @@ class I18nServiceImpl(
                     translationLanguage = targetLanguage,
                     currentDate = now
                 )
+                existingTranslations.add(input.key to targetLanguage)
                 counter++
             }
         }
