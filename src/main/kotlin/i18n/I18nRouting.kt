@@ -3,29 +3,26 @@ package com.zioanacleto.i18n
 import com.zioanacleto.basePostApi
 import com.zioanacleto.i18n.service.I18nService
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.json.Json
+import kotlinx.coroutines.launch
 import org.koin.ktor.ext.inject
 
 fun Routing.setupI18nRouting() {
     val i18nService: I18nService by inject()
 
     post("/i18n/add") {
-        val log = call.application.log
-        val requestText = call.receiveText()
-        log.debug(requestText)
-
-        val request = Json.decodeFromString<ExposedI18nRequest>(requestText)
-        log.debug("Add strings: {}", request)
-
+        val request = call.receive<ExposedI18nRequest>()
         basePostApi(request) {
-            val counter = i18nService.insertStrings(request)
-            call.respond(HttpStatusCode.Created, counter)
+            val inserted = i18nService.insertBaseStrings(request)
+            call.respond(HttpStatusCode.Created, inserted)
 
-            counter
+            inserted
+        }
+        // Background job to translate with AI new strings
+        call.application.launch {
+            i18nService.generateTranslationsAsync(request)
         }
     }
 }
