@@ -3,6 +3,7 @@ package com.zioanacleto.i18n.repository
 import com.zioanacleto.dbQuery
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class I18nRepositoryImpl(
@@ -80,6 +81,21 @@ class I18nRepositoryImpl(
                 I18nTranslations.language
             )
             .map { it[I18nTranslations.textId] to it[I18nTranslations.language] }
+    }
+
+    override suspend fun markAsTranslatedIfComplete(key: String) = dbQuery {
+        val count = I18nTranslations
+            .select(
+                (I18nTranslations.textId eq key) and
+                        (I18nTranslations.language inList listOf("en", "it"))
+            )
+            .count()
+
+        if (count >= 2) {
+            I18nTextIds.update({ I18nTextIds.textId eq key }) {
+                it[isTranslated] = true
+            }
+        }
     }
 
     companion object {

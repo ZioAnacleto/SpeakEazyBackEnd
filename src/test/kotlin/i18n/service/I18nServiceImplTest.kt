@@ -31,7 +31,7 @@ class I18nServiceImplTest {
     // -----------------------------
 
     @Test
-    fun `should insert new keys and base translations`() = runTest {
+    fun `should insert new keys and base translations only`() = runTest {
         val request = ExposedI18nRequest(
             app = "testApp",
             strings = listOf(
@@ -40,25 +40,19 @@ class I18nServiceImplTest {
         )
 
         coEvery { repository.getAllTextIds() } returns emptyList()
-        coEvery { repository.translationExists(any(), any()) } returns false
-        coEvery { translator.translateMultipleTexts(any()) } returns listOf("Casa")
+        coEvery { repository.getAllTranslations() } returns emptyList()
 
-        val result = service.insertStrings(request)
+        val result = service.insertBaseStrings(request)
 
         coVerify { repository.insertNewString("home") }
         coVerify {
             repository.insertNewTranslation("home", "Home", "en", any())
         }
-        coVerify {
-            repository.insertNewTranslation("home", "Casa", "it", any())
+        coVerify(exactly = 0) {
+            translator.translateMultipleTexts(any())
         }
-
-        assertEquals(2, result)
+        assertEquals(1, result)
     }
-
-    // -----------------------------
-    // NO DUPLICATE KEYS
-    // -----------------------------
 
     @Test
     fun `should not insert existing keys`() = runTest {
@@ -70,20 +64,15 @@ class I18nServiceImplTest {
         )
 
         coEvery { repository.getAllTextIds() } returns listOf("home")
-        coEvery { repository.translationExists(any(), any()) } returns false
-        coEvery { translator.translateMultipleTexts(any()) } returns listOf("Casa")
+        coEvery { repository.getAllTranslations() } returns emptyList()
 
-        service.insertStrings(request)
+        service.insertBaseStrings(request)
 
         coVerify(exactly = 0) { repository.insertNewString(any()) }
     }
 
-    // -----------------------------
-    // SKIP EXISTING TRANSLATION
-    // -----------------------------
-
     @Test
-    fun `should skip existing translations`() = runTest {
+    fun `should skip existing base translations`() = runTest {
         val request = ExposedI18nRequest(
             app = "testApp",
             strings = listOf(
@@ -92,17 +81,13 @@ class I18nServiceImplTest {
         )
 
         coEvery { repository.getAllTextIds() } returns emptyList()
+        coEvery { repository.getAllTranslations() } returns listOf("home" to "en")
 
-        coEvery { repository.translationExists("home", "en") } returns true
-        coEvery { repository.translationExists("home", "it") } returns true
-        coEvery { repository.getAllTranslations() } returns (listOf("home" to "en"))
-
-        val result = service.insertStrings(request)
+        val result = service.insertBaseStrings(request)
 
         coVerify(exactly = 0) {
             repository.insertNewTranslation(any(), any(), any(), any())
         }
-
         assertEquals(0, result)
     }
 
@@ -110,7 +95,6 @@ class I18nServiceImplTest {
     // BATCH TRANSLATION
     // -----------------------------
 
-    @Test
     fun `should translate using batch`() = runTest {
         val request = ExposedI18nRequest(
             app = "testApp",
@@ -120,16 +104,13 @@ class I18nServiceImplTest {
             )
         )
 
-        coEvery { repository.getAllTextIds() } returns emptyList()
-        coEvery { repository.translationExists(any(), any()) } returns false
+        coEvery { repository.getAllTranslations() } returns emptyList()
 
         coEvery {
             translator.translateMultipleTexts(listOf("Home", "Login"))
         } returns listOf("Casa", "Accesso")
 
-        val result = service.insertStrings(request)
-
-        assertEquals(4, result)
+        service.generateTranslationsAsync(request)
 
         coVerify {
             repository.insertNewTranslation("home", "Casa", "it", any())
@@ -152,53 +133,17 @@ class I18nServiceImplTest {
             )
         )
 
-        coEvery { repository.getAllTextIds() } returns emptyList()
-        coEvery { repository.translationExists(any(), any()) } returns false
+        coEvery { repository.getAllTranslations() } returns emptyList()
+        coEvery { translator.translateMultipleTexts(any()) } throws RuntimeException()
+        coEvery { translator.translateSingleText("Home", true) } returns "Casa"
 
-        coEvery {
-            translator.translateMultipleTexts(any())
-        } throws RuntimeException("Batch error")
-
-        coEvery {
-            translator.translateSingleText("Home", true)
-        } returns "Casa"
-
-        val result = service.insertStrings(request)
+        service.generateTranslationsAsync(request)
 
         coVerify {
             translator.translateSingleText("Home", true)
         }
-
         coVerify {
             repository.insertNewTranslation("home", "Casa", "it", any())
-        }
-
-        assertEquals(2, result)
-    }
-
-    // -----------------------------
-    // FALLBACK FAILURE (use original)
-    // -----------------------------
-
-    @Test
-    fun `should fallback to original text if single translation fails`() = runTest {
-        val request = ExposedI18nRequest(
-            app = "testApp",
-            strings = listOf(
-                I18nKeyAndValue("home", "Home", "en")
-            )
-        )
-
-        coEvery { repository.getAllTextIds() } returns emptyList()
-        coEvery { repository.translationExists(any(), any()) } returns false
-
-        coEvery { translator.translateMultipleTexts(any()) } throws RuntimeException()
-        coEvery { translator.translateSingleText(any(), any()) } throws RuntimeException()
-
-        service.insertStrings(request)
-
-        coVerify {
-            repository.insertNewTranslation("home", "Home", "it", any())
         }
     }
 
@@ -207,26 +152,19 @@ class I18nServiceImplTest {
     // -----------------------------
 
     @Test
-    fun `should split into chunks when exceeding chunk size`() = runTest {
+    fun `should chunk batch requests`() = runTest {
         val strings = (1..25).map {
             I18nKeyAndValue("key$it", "value$it", "en")
         }
+        val request = ExposedI18nRequest("testApp", strings)
 
-        val request = ExposedI18nRequest(app = "testApp", strings)
-
-        coEvery { repository.getAllTextIds() } returns emptyList()
-        coEvery { repository.translationExists(any(), any()) } returns false
-
+        coEvery { repository.getAllTranslations() } returns emptyList()
         coEvery { translator.translateMultipleTexts(any()) } answers {
             firstArg<List<String>>().map { "it_$it" }
         }
 
-        val result = service.insertStrings(request)
+        service.generateTranslationsAsync(request)
 
-        // 25 en + 25 it
-        assertEquals(50, result)
-
-        // Verifica che batch sia stato chiamato più volte (chunking)
         coVerify(atLeast = 2) {
             translator.translateMultipleTexts(any())
         }
@@ -253,13 +191,32 @@ class I18nServiceImplTest {
             translator.translateMultipleTexts(any())
         } returns listOf("Casa") // mismatch size
 
-        val result = service.insertStrings(request)
+        val result = service.insertBaseStrings(request)
 
         // solo base insert (2)
         assertEquals(2, result)
 
         coVerify(exactly = 0) {
             repository.insertNewTranslation(any(), "Casa", "it", any())
+        }
+    }
+
+    @Test
+    fun `should mark as translated when both languages exist`() = runTest {
+        val request = ExposedI18nRequest(
+            app = "testApp",
+            strings = listOf(
+                I18nKeyAndValue("home", "Home", "en")
+            )
+        )
+
+        coEvery { repository.getAllTranslations() } returns listOf("home" to "en")
+        coEvery { translator.translateMultipleTexts(any()) } returns listOf("Casa")
+
+        service.generateTranslationsAsync(request)
+
+        coVerify {
+            repository.markAsTranslatedIfComplete("home")
         }
     }
 }

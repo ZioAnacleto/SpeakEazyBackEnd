@@ -18,12 +18,13 @@ class I18nServiceImpl(
 
     private val log = LoggerFactory.getLogger(I18nServiceImpl::class.java)
 
-    override suspend fun insertStrings(request: ExposedI18nRequest): Int {
+    override suspend fun insertBaseStrings(request: ExposedI18nRequest): Int {
         val now = Instant.now().toString()
         var counter = 0
 
         log.debug("Starting inserting new strings")
         val existingKeys = repository.getAllTextIds().toSet()
+        val existingTranslations = repository.getAllTranslations().toMutableSet()
 
         log.debug("existingKeys: {}, size: {}", existingKeys, existingKeys.size)
         val newStrings = request.strings.filter { it.key !in existingKeys }
@@ -35,11 +36,6 @@ class I18nServiceImpl(
             repository.insertNewString(it.key)
         }
 
-        log.debug("New strings inserted in DB.")
-
-        val existingTranslations = repository.getAllTranslations().toMutableSet()
-
-        // Insert base translations
         request.strings.forEach { input ->
             val exists = (input.key to input.language) in existingTranslations
 
@@ -55,15 +51,17 @@ class I18nServiceImpl(
             }
         }
 
-        // AI auto translation via batch
-        val baseLanguage = "en"
-        val targetLanguage = "it"
+        return counter
+    }
 
-        val baseStrings = request.strings.filter { it.language == baseLanguage }
+    override suspend fun generateTranslationsAsync(request: ExposedI18nRequest) {
+        val now = Instant.now().toString()
+        val existingTranslations = repository.getAllTranslations().toMutableSet()
 
         // Filter out the already translated textIds
+        val baseStrings = request.strings.filter { it.language == "en" }
         val toTranslate = baseStrings.filterNot {
-            (it.key to targetLanguage) in existingTranslations
+            (it.key to "it") in existingTranslations
         }
 
         log.debug("Strings to translate: {}", toTranslate.size)
@@ -77,36 +75,22 @@ class I18nServiceImpl(
             val translatedTexts = try {
                 translator.translateMultipleTexts(texts)
             } catch (e: Exception) {
-                log.error("Batch translation failed, fallback to single", e)
-
-                // fallback
-                texts.map { text ->
-                    try {
-                        translator.translateSingleText(text, true)
-                    } catch (e: Exception) {
-                        text
-                    }
-                }
-            }
-
-            // Safety check
-            if (translatedTexts.size != chunk.size) {
-                log.error("Mismatch translations size. Fallback chunk.")
-                return@forEach
+                texts.map { translator.translateSingleText(it, true) }
             }
 
             chunk.zip(translatedTexts).forEach { (input, translated) ->
                 repository.insertNewTranslation(
                     keyTextId = input.key,
                     translation = translated,
-                    translationLanguage = targetLanguage,
+                    translationLanguage = "it",
                     currentDate = now
                 )
-                existingTranslations.add(input.key to targetLanguage)
-                counter++
+
+                existingTranslations.add(input.key to "it")
+
+                // 👇 aggiorna stato
+                repository.markAsTranslatedIfComplete(input.key)
             }
         }
-
-        return counter
     }
 }
