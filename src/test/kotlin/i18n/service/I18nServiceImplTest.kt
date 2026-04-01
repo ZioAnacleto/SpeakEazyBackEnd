@@ -1,7 +1,7 @@
 package i18n.service
 
 import com.zioanacleto.i18n.ExposedI18nRequest
-import com.zioanacleto.i18n.I18nKeyAndValue
+import com.zioanacleto.i18n.I18nKeyValueLanguage
 import com.zioanacleto.i18n.repository.I18nRepository
 import com.zioanacleto.i18n.service.I18nServiceImpl
 import com.zioanacleto.i18n.translator.Translator
@@ -35,7 +35,7 @@ class I18nServiceImplTest {
         val request = ExposedI18nRequest(
             app = "testApp",
             strings = listOf(
-                I18nKeyAndValue("home", "Home", "en")
+                I18nKeyValueLanguage("home", "Home", "en")
             )
         )
 
@@ -59,7 +59,7 @@ class I18nServiceImplTest {
         val request = ExposedI18nRequest(
             app = "testApp",
             strings = listOf(
-                I18nKeyAndValue("home", "Home", "en")
+                I18nKeyValueLanguage("home", "Home", "en")
             )
         )
 
@@ -76,7 +76,7 @@ class I18nServiceImplTest {
         val request = ExposedI18nRequest(
             app = "testApp",
             strings = listOf(
-                I18nKeyAndValue("home", "Home", "en")
+                I18nKeyValueLanguage("home", "Home", "en")
             )
         )
 
@@ -95,12 +95,13 @@ class I18nServiceImplTest {
     // BATCH TRANSLATION
     // -----------------------------
 
+    @Test
     fun `should translate using batch`() = runTest {
         val request = ExposedI18nRequest(
             app = "testApp",
             strings = listOf(
-                I18nKeyAndValue("home", "Home", "en"),
-                I18nKeyAndValue("login", "Login", "en")
+                I18nKeyValueLanguage("home", "Home", "en"),
+                I18nKeyValueLanguage("login", "Login", "en")
             )
         )
 
@@ -129,7 +130,7 @@ class I18nServiceImplTest {
         val request = ExposedI18nRequest(
             app = "testApp",
             strings = listOf(
-                I18nKeyAndValue("home", "Home", "en")
+                I18nKeyValueLanguage("home", "Home", "en")
             )
         )
 
@@ -154,7 +155,7 @@ class I18nServiceImplTest {
     @Test
     fun `should chunk batch requests`() = runTest {
         val strings = (1..25).map {
-            I18nKeyAndValue("key$it", "value$it", "en")
+            I18nKeyValueLanguage("key$it", "value$it", "en")
         }
         val request = ExposedI18nRequest("testApp", strings)
 
@@ -179,8 +180,8 @@ class I18nServiceImplTest {
         val request = ExposedI18nRequest(
             app = "testApp",
             strings = listOf(
-                I18nKeyAndValue("home", "Home", "en"),
-                I18nKeyAndValue("login", "Login", "en")
+                I18nKeyValueLanguage("home", "Home", "en"),
+                I18nKeyValueLanguage("login", "Login", "en")
             )
         )
 
@@ -206,7 +207,7 @@ class I18nServiceImplTest {
         val request = ExposedI18nRequest(
             app = "testApp",
             strings = listOf(
-                I18nKeyAndValue("home", "Home", "en")
+                I18nKeyValueLanguage("home", "Home", "en")
             )
         )
 
@@ -218,5 +219,36 @@ class I18nServiceImplTest {
         coVerify {
             repository.markAsTranslatedIfComplete("home")
         }
+    }
+
+    @Test
+    fun `should export all translations grouped by language`() = runTest {
+        coEvery { repository.getAllTranslationsFull() } returns listOf(
+            I18nKeyValueLanguage(
+                "home",
+                "Home",
+                "en"
+            ),
+            I18nKeyValueLanguage(
+                "login",
+                "Login",
+                "en"
+            ),
+            I18nKeyValueLanguage(
+                "home",
+                "Casa",
+                "it"
+            ),
+            I18nKeyValueLanguage(
+                "login",
+                "Accesso",
+                "it"
+            )
+        )
+
+        val export = service.exportTranslations()
+
+        assertEquals(export.languages.size, 2)
+        assertEquals(export.app, "speakeazy-android")
     }
 }

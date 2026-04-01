@@ -1,13 +1,11 @@
 package com.zioanacleto.i18n.service
 
 import com.zioanacleto.i18n.ExposedI18nRequest
+import com.zioanacleto.i18n.ExposedI18nResponse
+import com.zioanacleto.i18n.ExposedI18nResponseLanguages
+import com.zioanacleto.i18n.I18nKeyValue
 import com.zioanacleto.i18n.repository.I18nRepository
 import com.zioanacleto.i18n.translator.Translator
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import org.slf4j.LoggerFactory
 import java.time.Instant
 
@@ -88,9 +86,27 @@ class I18nServiceImpl(
 
                 existingTranslations.add(input.key to "it")
 
-                // 👇 aggiorna stato
+                // update status
                 repository.markAsTranslatedIfComplete(input.key)
             }
         }
     }
+
+    override suspend fun exportTranslations(): ExposedI18nResponse =
+        repository.getAllTranslationsFull()
+            .groupBy { it.language }
+            .map { (language, items) ->
+                ExposedI18nResponseLanguages(
+                    language = language,
+                    strings = items.map {
+                        I18nKeyValue(it.key, it.value)
+                    }
+                )
+            }
+            .let { languages ->
+                ExposedI18nResponse(
+                    app = "speakeazy-android",
+                    languages = languages
+                )
+            }
 }

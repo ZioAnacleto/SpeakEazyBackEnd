@@ -1,5 +1,6 @@
 package com.zioanacleto.i18n
 
+import com.zioanacleto.baseGetApi
 import com.zioanacleto.basePostApi
 import com.zioanacleto.i18n.service.I18nService
 import io.ktor.http.*
@@ -23,6 +24,15 @@ fun Routing.setupI18nRouting() {
         // Background job to translate with AI new strings
         call.application.launch {
             i18nService.generateTranslationsAsync(request)
+        }
+    }
+
+    get("/i18n/export") {
+        baseGetApi {
+            val export = i18nService.exportTranslations()
+            call.respond(HttpStatusCode.OK, export)
+
+            export
         }
     }
 }
