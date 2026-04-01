@@ -10,4 +10,5 @@ interface I18nRepository {
     ): Int
     suspend fun getAllTextIds(): List<String>
     suspend fun translationExists(key: String, language: String): Boolean
+    suspend fun getAllTranslations(): List<Pair<String, String>>
 }

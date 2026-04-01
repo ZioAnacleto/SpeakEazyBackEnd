@@ -95,6 +95,7 @@ class I18nServiceImplTest {
 
         coEvery { repository.translationExists("home", "en") } returns true
         coEvery { repository.translationExists("home", "it") } returns true
+        coEvery { repository.getAllTranslations() } returns (listOf("home" to "en"))
 
         val result = service.insertStrings(request)
 
