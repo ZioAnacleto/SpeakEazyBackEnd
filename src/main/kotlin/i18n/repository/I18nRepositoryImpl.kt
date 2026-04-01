@@ -1,6 +1,7 @@
 package com.zioanacleto.i18n.repository
 
 import com.zioanacleto.dbQuery
+import com.zioanacleto.i18n.I18nKeyValueLanguage
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
@@ -96,6 +97,18 @@ class I18nRepositoryImpl(
                 it[isTranslated] = true
             }
         }
+    }
+
+    override suspend fun getAllTranslationsFull(): List<I18nKeyValueLanguage> = dbQuery {
+        I18nTranslations
+            .selectAll()
+            .map {
+                I18nKeyValueLanguage(
+                    key = it[I18nTranslations.textId],
+                    value = it[I18nTranslations.value],
+                    language = it[I18nTranslations.language]
+                )
+            }
     }
 
     companion object {

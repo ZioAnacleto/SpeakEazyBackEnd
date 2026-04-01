@@ -112,4 +112,33 @@ class I18nRepositoryImplTest {
 
         assertFalse(exists)
     }
+
+    @Test
+    fun `getAllTranslationsFull should return empty list when no data`() = runBlocking {
+        val result = repository.getAllTranslationsFull()
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `getAllTranslationsFull should return all inserted translations`() = runBlocking {
+        repository.insertNewTranslation(
+            "key1",
+            "translation1",
+            "it",
+            "current_date"
+        )
+        repository.insertNewTranslation(
+            "key2",
+            "translation2",
+            "it",
+            "current_date"
+        )
+
+        val result = repository.getAllTranslationsFull()
+
+        assertEquals(2, result.size)
+        assertTrue(result[0].key == "key1")
+        assertTrue(result[1].key == "key2")
+    }
 }
