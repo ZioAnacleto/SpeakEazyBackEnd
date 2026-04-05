@@ -2,6 +2,7 @@ package i18n.service
 
 import com.zioanacleto.i18n.ExposedI18nRequest
 import com.zioanacleto.i18n.I18nKeyValueLanguage
+import com.zioanacleto.i18n.Language
 import com.zioanacleto.i18n.repository.I18nRepository
 import com.zioanacleto.i18n.service.I18nServiceImpl
 import com.zioanacleto.i18n.translator.Translator
@@ -31,7 +32,7 @@ class I18nServiceImplTest {
     // -----------------------------
 
     @Test
-    fun `should insert new keys and base translations only`() = runTest {
+    fun `should insert new keys and base translations`() = runTest {
         val request = ExposedI18nRequest(
             app = "testApp",
             strings = listOf(
@@ -40,7 +41,7 @@ class I18nServiceImplTest {
         )
 
         coEvery { repository.getAllTextIds() } returns emptyList()
-        coEvery { repository.getAllTranslations() } returns emptyList()
+        coEvery { repository.getTranslationValue("home", "en") } returns null
 
         val result = service.insertBaseStrings(request)
 
@@ -48,9 +49,7 @@ class I18nServiceImplTest {
         coVerify {
             repository.insertNewTranslation("home", "Home", "en", any())
         }
-        coVerify(exactly = 0) {
-            translator.translateMultipleTexts(any())
-        }
+
         assertEquals(1, result)
     }
 
@@ -72,7 +71,7 @@ class I18nServiceImplTest {
     }
 
     @Test
-    fun `should skip existing base translations`() = runTest {
+    fun `should skip existing base translation if value is unchanged`() = runTest {
         val request = ExposedI18nRequest(
             app = "testApp",
             strings = listOf(
@@ -81,14 +80,116 @@ class I18nServiceImplTest {
         )
 
         coEvery { repository.getAllTextIds() } returns emptyList()
-        coEvery { repository.getAllTranslations() } returns listOf("home" to "en")
+        coEvery { repository.getTranslationValue("home", "en") } returns "Home"
 
         val result = service.insertBaseStrings(request)
 
         coVerify(exactly = 0) {
             repository.insertNewTranslation(any(), any(), any(), any())
         }
+        coVerify(exactly = 0) {
+            repository.updateTranslation(any(), any(), any(), any())
+        }
+
         assertEquals(0, result)
+    }
+
+    @Test
+    fun `should update translation and invalidate others if value changed`() = runTest {
+        val request = ExposedI18nRequest(
+            app = "testApp",
+            strings = listOf(
+                I18nKeyValueLanguage("home", "Sign in", "en")
+            )
+        )
+
+        coEvery { repository.getAllTextIds() } returns emptyList()
+        coEvery { repository.getTranslationValue("home", "en") } returns "Login"
+
+        val result = service.insertBaseStrings(request)
+
+        coVerify {
+            repository.updateTranslation("home", "Sign in", "en", any())
+        }
+
+        coVerify {
+            repository.deleteTranslationsByKeyExceptLanguage(
+                key = "home",
+                languageToKeep = Language.ENGLISH.code
+            )
+        }
+
+        coVerify(exactly = 0) {
+            repository.insertNewTranslation(any(), any(), any(), any())
+        }
+
+        assertEquals(1, result)
+    }
+
+    @Test
+    fun `should not insert key if already exists`() = runTest {
+        val request = ExposedI18nRequest(
+            app = "testApp",
+            strings = listOf(
+                I18nKeyValueLanguage("home", "Home", "en")
+            )
+        )
+
+        coEvery { repository.getAllTextIds() } returns listOf("home")
+        coEvery { repository.getTranslationValue("home", "en") } returns null
+
+        service.insertBaseStrings(request)
+
+        coVerify(exactly = 0) {
+            repository.insertNewString(any())
+        }
+    }
+
+    @Test
+    fun `should handle mix of new unchanged and updated strings`() = runTest {
+        val request = ExposedI18nRequest(
+            app = "testApp",
+            strings = listOf(
+                I18nKeyValueLanguage("home", "Home", "en"),        // unchanged
+                I18nKeyValueLanguage("login", "Sign in", "en"),    // updated
+                I18nKeyValueLanguage("profile", "Profile", "en")   // new
+            )
+        )
+
+        coEvery { repository.getAllTextIds() } returns listOf("home", "login")
+
+        coEvery { repository.getTranslationValue("home", "en") } returns "Home"
+        coEvery { repository.getTranslationValue("login", "en") } returns "Login"
+        coEvery { repository.getTranslationValue("profile", "en") } returns null
+
+        val result = service.insertBaseStrings(request)
+
+        // new key
+        coVerify { repository.insertNewString("profile") }
+
+        // unchanged → nothing
+        coVerify(exactly = 0) {
+            repository.updateTranslation("home", any(), any(), any())
+        }
+
+        // updated
+        coVerify {
+            repository.updateTranslation("login", "Sign in", "en", any())
+        }
+
+        coVerify {
+            repository.deleteTranslationsByKeyExceptLanguage(
+                key = "login",
+                languageToKeep = Language.ENGLISH.code
+            )
+        }
+
+        // new translation
+        coVerify {
+            repository.insertNewTranslation("profile", "Profile", "en", any())
+        }
+
+        assertEquals(2, result) // update + insert
     }
 
     // -----------------------------

@@ -2,9 +2,11 @@ package com.zioanacleto.i18n.repository
 
 import com.zioanacleto.dbQuery
 import com.zioanacleto.i18n.I18nKeyValueLanguage
+import com.zioanacleto.i18n.Language
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class I18nRepositoryImpl(
@@ -88,7 +90,7 @@ class I18nRepositoryImpl(
         val count = I18nTranslations
             .select(
                 (I18nTranslations.textId eq key) and
-                        (I18nTranslations.language inList listOf("en", "it"))
+                        (I18nTranslations.language inList Language.entries.map { it.code })
             )
             .count()
 
@@ -109,6 +111,44 @@ class I18nRepositoryImpl(
                     language = it[I18nTranslations.language]
                 )
             }
+    }
+
+    override suspend fun getTranslationValue(
+        key: String,
+        language: String
+    ): String? = dbQuery {
+        I18nTranslations
+            .select(
+                (I18nTranslations.textId eq key) and
+                        (I18nTranslations.language eq language)
+            )
+            .limit(1)
+            .map { it[I18nTranslations.value] }
+            .firstOrNull()
+    }
+
+    override suspend fun updateTranslation(
+        keyTextId: String,
+        translation: String,
+        translationLanguage: String,
+        currentDate: String
+    ): Int = dbQuery {
+        I18nTranslations.update({
+            (I18nTranslations.textId eq keyTextId) and
+                    (I18nTranslations.language eq translationLanguage)
+        }) {
+            it[value] = translation
+            it[lastUpdate] = currentDate
+        }
+    }
+
+    override suspend fun deleteTranslationsByKeyExceptLanguage(
+        key: String,
+        languageToKeep: String
+    ) = dbQuery {
+        I18nTranslations.deleteWhere {
+            (textId eq key) and (language neq languageToKeep)
+        }
     }
 
     companion object {
