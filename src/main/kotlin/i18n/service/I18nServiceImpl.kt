@@ -1,9 +1,6 @@
 package com.zioanacleto.i18n.service
 
-import com.zioanacleto.i18n.ExposedI18nRequest
-import com.zioanacleto.i18n.ExposedI18nResponse
-import com.zioanacleto.i18n.ExposedI18nResponseLanguages
-import com.zioanacleto.i18n.I18nKeyValue
+import com.zioanacleto.i18n.*
 import com.zioanacleto.i18n.repository.I18nRepository
 import com.zioanacleto.i18n.translator.Translator
 import org.slf4j.LoggerFactory
@@ -22,7 +19,6 @@ class I18nServiceImpl(
 
         log.debug("Starting inserting new strings")
         val existingKeys = repository.getAllTextIds().toSet()
-        val existingTranslations = repository.getAllTranslations().toMutableSet()
 
         log.debug("existingKeys: {}, size: {}", existingKeys, existingKeys.size)
         val newStrings = request.strings.filter { it.key !in existingKeys }
@@ -35,16 +31,32 @@ class I18nServiceImpl(
         }
 
         request.strings.forEach { input ->
-            val exists = (input.key to input.language) in existingTranslations
+            val existingValue = repository.getTranslationValue(input.key, input.language)
 
-            if (!exists) {
+            existingValue?.let {
+                if (it != input.value) {
+                    repository.updateTranslation(
+                        keyTextId = input.key,
+                        translation = input.value,
+                        translationLanguage = input.language,
+                        currentDate = now
+                    )
+
+                    repository.deleteTranslationsByKeyExceptLanguage(
+                        key = input.key,
+                        languageToKeep = Language.ENGLISH.code
+                    )
+
+                    counter++
+                }
+            } ?: run {
+                // nuovo → insert
                 repository.insertNewTranslation(
                     keyTextId = input.key,
                     translation = input.value,
                     translationLanguage = input.language,
                     currentDate = now
                 )
-                existingTranslations.add(input.key to input.language)
                 counter++
             }
         }
@@ -57,9 +69,9 @@ class I18nServiceImpl(
         val existingTranslations = repository.getAllTranslations().toMutableSet()
 
         // Filter out the already translated textIds
-        val baseStrings = request.strings.filter { it.language == "en" }
+        val baseStrings = request.strings.filter { it.language == Language.ENGLISH.code }
         val toTranslate = baseStrings.filterNot {
-            (it.key to "it") in existingTranslations
+            (it.key to Language.ITALIAN.code) in existingTranslations
         }
 
         log.debug("Strings to translate: {}", toTranslate.size)
@@ -80,11 +92,11 @@ class I18nServiceImpl(
                 repository.insertNewTranslation(
                     keyTextId = input.key,
                     translation = translated,
-                    translationLanguage = "it",
+                    translationLanguage = Language.ITALIAN.code,
                     currentDate = now
                 )
 
-                existingTranslations.add(input.key to "it")
+                existingTranslations.add(input.key to Language.ITALIAN.code)
 
                 // update status
                 repository.markAsTranslatedIfComplete(input.key)

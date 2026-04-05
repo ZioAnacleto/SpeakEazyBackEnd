@@ -32,3 +32,8 @@ data class I18nKeyValue(
     val key: String,
     val value: String,
 )
+
+enum class Language(val code: String) {
+    ENGLISH("en"),
+    ITALIAN("it")
+}
