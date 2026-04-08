@@ -5,7 +5,6 @@ import com.zioanacleto.i18n.I18nKeyValueLanguage
 import com.zioanacleto.i18n.Language
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -30,10 +29,18 @@ class I18nRepositoryImpl(
         override val primaryKey: PrimaryKey = PrimaryKey(id)
     }
 
+    object I18nMetadata : Table() {
+        val key = varchar(DB_KEY_KEY, 100)
+        val value = varchar(DB_KEY_VALUE, 100)
+
+        override val primaryKey: PrimaryKey = PrimaryKey(key)
+    }
+
     init {
         transaction(database) {
             SchemaUtils.create(I18nTextIds)
             SchemaUtils.create(I18nTranslations)
+            SchemaUtils.create(I18nMetadata)
         }
     }
 
@@ -60,7 +67,7 @@ class I18nRepositoryImpl(
 
     override suspend fun getAllTextIds(): List<String> = dbQuery {
         I18nTextIds
-            .select(I18nTextIds.textId)
+            .selectAll()
             .map { it[I18nTextIds.textId] }
     }
 
@@ -69,29 +76,28 @@ class I18nRepositoryImpl(
         language: String
     ): Boolean = dbQuery {
         I18nTranslations
-            .select(
+            .selectAll()
+            .where {
                 (I18nTranslations.textId eq key) and
                         (I18nTranslations.language eq language)
-            )
+            }
             .limit(1)
             .any()
     }
 
     override suspend fun getAllTranslations(): List<Pair<String, String>> = dbQuery {
         I18nTranslations
-            .select(
-                I18nTranslations.textId,
-                I18nTranslations.language
-            )
+            .selectAll()
             .map { it[I18nTranslations.textId] to it[I18nTranslations.language] }
     }
 
     override suspend fun markAsTranslatedIfComplete(key: String) = dbQuery {
         val count = I18nTranslations
-            .select(
+            .selectAll()
+            .where {
                 (I18nTranslations.textId eq key) and
                         (I18nTranslations.language inList Language.entries.map { it.code })
-            )
+            }
             .count()
 
         if (count >= 2) {
@@ -118,10 +124,11 @@ class I18nRepositoryImpl(
         language: String
     ): String? = dbQuery {
         I18nTranslations
-            .select(
+            .selectAll()
+            .where {
                 (I18nTranslations.textId eq key) and
                         (I18nTranslations.language eq language)
-            )
+            }
             .limit(1)
             .map { it[I18nTranslations.value] }
             .firstOrNull()
@@ -151,6 +158,32 @@ class I18nRepositoryImpl(
         }
     }
 
+    override suspend fun getLatestUpdate(): String? = dbQuery {
+        I18nTranslations
+            .selectAll()
+            .orderBy(I18nTranslations.lastUpdate, SortOrder.DESC)
+            .limit(1)
+            .map { it[I18nTranslations.lastUpdate] }
+            .firstOrNull()
+    }
+
+    override suspend fun getMetadata(key: String): String? = dbQuery {
+        I18nMetadata
+            .selectAll()
+            .where {
+                I18nMetadata.key eq key
+            }
+            .map { it[I18nMetadata.value] }
+            .firstOrNull()
+    }
+
+    override suspend fun setMetadata(key: String, value: String) = dbQuery {
+        I18nMetadata.upsert {
+            it[I18nMetadata.key] = key
+            it[I18nMetadata.value] = value
+        }[I18nMetadata.key]
+    }
+
     companion object {
         private const val DB_KEY_ID = "id"
         private const val DB_KEY_TEXT_ID = "textid"
@@ -158,5 +191,9 @@ class I18nRepositoryImpl(
         private const val DB_KEY_LANGUAGE = "language"
         private const val DB_KEY_VALUE = "value"
         private const val DB_KEY_LAST_UPDATE = "lastupdate"
+        private const val DB_KEY_KEY = "key"
+
+        const val LAST_PUBLISHED_VERSION = "LAST_PUBLISHED_VERSION"
+        const val LAST_PUBLISHED_DATE = "LAST_PUBLISHED_DATE"
     }
 }
