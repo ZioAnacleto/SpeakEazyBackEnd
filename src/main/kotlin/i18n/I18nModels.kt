@@ -33,6 +33,12 @@ data class I18nKeyValue(
     val value: String,
 )
 
+@Serializable
+data class I18nUpdates(
+    val hasUpdates: Boolean,
+    val version: String
+)
+
 enum class Language(val code: String) {
     ENGLISH("en"),
     ITALIAN("it")

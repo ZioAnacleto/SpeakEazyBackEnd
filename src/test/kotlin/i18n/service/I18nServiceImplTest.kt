@@ -4,12 +4,15 @@ import com.zioanacleto.i18n.ExposedI18nRequest
 import com.zioanacleto.i18n.I18nKeyValueLanguage
 import com.zioanacleto.i18n.Language
 import com.zioanacleto.i18n.repository.I18nRepository
+import com.zioanacleto.i18n.repository.I18nRepositoryImpl
 import com.zioanacleto.i18n.service.I18nServiceImpl
 import com.zioanacleto.i18n.translator.Translator
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -351,5 +354,76 @@ class I18nServiceImplTest {
 
         assertEquals(export.languages.size, 2)
         assertEquals(export.app, "speakeazy-android")
+    }
+
+    @Test
+    fun `hasUpdates should return true when db date is different from last published`() = runTest {
+        coEvery { repository.getLatestUpdate() } returns "2024"
+        coEvery { repository.getMetadata(I18nRepositoryImpl.LAST_PUBLISHED_DATE) } returns "2023"
+        coEvery { repository.getMetadata(I18nRepositoryImpl.LAST_PUBLISHED_VERSION) } returns "1.0"
+
+        val result = service.hasUpdates()
+
+        assertTrue(result.hasUpdates)
+        assertEquals("1.0", result.version)
+    }
+
+    @Test
+    fun `hasUpdates should return false when dates are equal`() = runTest {
+        coEvery { repository.getLatestUpdate() } returns "2024"
+        coEvery { repository.getMetadata(I18nRepositoryImpl.LAST_PUBLISHED_DATE) } returns "2024"
+        coEvery { repository.getMetadata(I18nRepositoryImpl.LAST_PUBLISHED_VERSION) } returns "1.0"
+
+        val result = service.hasUpdates()
+
+        assertFalse(result.hasUpdates)
+    }
+
+    @Test
+    fun `hasUpdates should return false when db update is null`() = runTest {
+        coEvery { repository.getLatestUpdate() } returns null
+        coEvery { repository.getMetadata(any()) } returns "whatever"
+
+        val result = service.hasUpdates()
+
+        assertFalse(result.hasUpdates)
+    }
+
+    @Test
+    fun `hasUpdates should return empty version if null`() = runTest {
+        coEvery { repository.getLatestUpdate() } returns "2024"
+        coEvery { repository.getMetadata(I18nRepositoryImpl.LAST_PUBLISHED_DATE) } returns "2023"
+        coEvery { repository.getMetadata(I18nRepositoryImpl.LAST_PUBLISHED_VERSION) } returns null
+
+        val result = service.hasUpdates()
+
+        assertEquals("", result.version)
+    }
+
+    @Test
+    fun `getLatestUpdate should return value from repository`() = runTest {
+        coEvery { repository.getLatestUpdate() } returns "2024"
+
+        val result = service.getLatestUpdate()
+
+        assertEquals("2024", result)
+    }
+
+    @Test
+    fun `getLatestUpdate should return null when repository returns null`() = runTest {
+        coEvery { repository.getLatestUpdate() } returns null
+
+        val result = service.getLatestUpdate()
+
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun `uploadMetadata should call repository setMetadata`() = runTest {
+        service.uploadMetadata("key", "value")
+
+        coVerify(exactly = 1) {
+            repository.setMetadata("key", "value")
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.zioanacleto.i18n.service
 
 import com.zioanacleto.i18n.*
 import com.zioanacleto.i18n.repository.I18nRepository
+import com.zioanacleto.i18n.repository.I18nRepositoryImpl
 import com.zioanacleto.i18n.translator.Translator
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -121,4 +122,23 @@ class I18nServiceImpl(
                     languages = languages
                 )
             }
+
+    override suspend fun hasUpdates(): I18nUpdates {
+        val latestDbUpdate = repository.getLatestUpdate()
+        val lastPublished = repository.getMetadata(I18nRepositoryImpl.LAST_PUBLISHED_DATE)
+        val lastVersion = repository.getMetadata(I18nRepositoryImpl.LAST_PUBLISHED_VERSION)
+
+        val hasUpdates = latestDbUpdate != null && latestDbUpdate != lastPublished
+
+        return I18nUpdates(
+            hasUpdates = hasUpdates,
+            version = lastVersion ?: ""
+        )
+    }
+
+    override suspend fun getLatestUpdate(): String? = repository.getLatestUpdate()
+
+    override suspend fun uploadMetadata(key: String, value: String) {
+        repository.setMetadata(key, value)
+    }
 }

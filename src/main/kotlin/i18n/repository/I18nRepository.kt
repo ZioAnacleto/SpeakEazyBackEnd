@@ -25,4 +25,7 @@ interface I18nRepository {
     ): Int
 
     suspend fun deleteTranslationsByKeyExceptLanguage(key: String, languageToKeep: String): Int
+    suspend fun getLatestUpdate(): String?
+    suspend fun getMetadata(key: String): String?
+    suspend fun setMetadata(key: String, value: String): String
 }
