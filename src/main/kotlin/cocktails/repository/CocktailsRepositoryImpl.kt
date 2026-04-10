@@ -167,6 +167,7 @@ class CocktailRepositoryImpl(
      */
     override suspend fun readAllWithIngredient(ingredientName: String): ExposedCocktailList =
         dbQuery {
+            val allIngredients = ingredientsService.readAll().ingredients
             ExposedCocktailList(
                 // Retrieve all cocktails
                 Cocktails.selectAll()
@@ -180,8 +181,7 @@ class CocktailRepositoryImpl(
                                 ingredient.id.toInt()
                             }
 
-                        val ingredients = ingredientsService.readAll()
-                            .ingredients
+                        val ingredients = allIngredients
                             .filter { ingredientsIds.contains(it.id.toInt()) && it.name == ingredientName }
                             .map { it.id }
 
@@ -193,30 +193,27 @@ class CocktailRepositoryImpl(
     // todo: pagination?
     override suspend fun readAll(): ExposedCocktailList =
         dbQuery {
+            val ingredientsMap = ingredientsService.readAll()
+                .ingredients
+                .associateBy { it.id }
+
             ExposedCocktailList(
                 Cocktails.selectAll()
                     .mapNotNull {
                         val cocktail = it.createCocktail()
 
-                        // Select ingredients' ids of selected Cocktail
-                        val ingredientsIds =
-                            cocktail.ingredients.ingredients.map { ingredient -> ingredient.id.toInt() }
-
                         // Create ExposedCocktailIngredient objects from Ingredients table
-                        val ingredients = ingredientsService.readAll().ingredients
-                            .filter { ingredientsIds.contains(it.id.toInt()) }
-                            .map { ingredient ->
-                                val cocktailIngredient = cocktail.ingredients.ingredients.find { ing ->
-                                    ing.id == ingredient.id
-                                }
+                        val ingredients = cocktail.ingredients.ingredients
+                            .mapNotNull cocktail@{ cocktailIngredient ->
+                                val ingredient = ingredientsMap[cocktailIngredient.id] ?: return@cocktail null
 
                                 ExposedCocktailIngredient(
                                     id = ingredient.id,
                                     name = ingredient.name,
                                     imageUrl = ingredient.imageUrl,
-                                    quantityCl = cocktailIngredient?.quantityCl.default("-"),
-                                    quantityOz = cocktailIngredient?.quantityOz.default("-"),
-                                    quantitySpecial = cocktailIngredient?.quantitySpecial
+                                    quantityCl = cocktailIngredient.quantityCl.default("-"),
+                                    quantityOz = cocktailIngredient.quantityOz.default("-"),
+                                    quantitySpecial = cocktailIngredient.quantitySpecial
                                 )
                             }
 
